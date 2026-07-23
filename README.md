@@ -16,16 +16,22 @@ workflow. See [`docs/prd-v1.5.md`](docs/prd-v1.5.md) for the full product spec.
 
 ## Quick start
 
+Relay uses Postgres. The easiest local database is the bundled docker-compose one:
+
 ```bash
-npm install          # install dependencies
-npm run setup        # generate Prisma client, create the SQLite db, and seed demo data
-npm run dev          # start the app at http://localhost:3000
+docker compose up -d   # start local Postgres (or point DATABASE_URL at any Postgres)
+npm install            # install dependencies
+npm run setup          # generate client, push schema, seed demo data
+npm run dev            # start the app at http://localhost:3000
 ```
 
 Then open:
 
 - **App** — http://localhost:3000 (dashboard, releases, repositories, changelog admin, settings)
 - **Public changelog** — http://localhost:3000/c/acme
+
+> No Docker? Set `DATABASE_URL` to any Postgres connection string (e.g. a free Neon database)
+> and run `npm run setup`.
 
 > Relay runs **fully offline with zero configuration**. AI generation uses a built-in
 > deterministic generator by default. Add an `OPENROUTER_API_KEY` (see below) to upgrade to
@@ -90,14 +96,20 @@ Copy `.env.example` → `.env.local` for secrets (all optional):
 
 | Variable | Purpose |
 | --- | --- |
+| `DATABASE_URL` | Postgres connection string (defaults to the docker-compose db in `.env`) |
 | `OPENROUTER_API_KEY` | Enables live AI generation via OpenRouter |
 | `OPENROUTER_MODELS` | Override the model fallback chain |
 | `GITHUB_WEBHOOK_SECRET` | Verify `X-Hub-Signature-256` on the webhook |
-| `DATABASE_URL` | SQLite path (defaults to `file:./dev.db` in `.env`) |
+
+## Deploy
+
+It's a Next.js app — deploy to **Vercel** with a Postgres database. The `vercel-build` script
+pushes the schema and seeds demo data on the first build. Full click-by-click steps:
+[**docs/DEPLOY.md**](docs/DEPLOY.md).
 
 ## Tech & structure
 
-Next.js 14 (App Router) · TypeScript · Tailwind · Prisma + SQLite · React Server Components
+Next.js 14 (App Router) · TypeScript · Tailwind · Prisma + Postgres · React Server Components
 with Server Actions for all mutations.
 
 ```

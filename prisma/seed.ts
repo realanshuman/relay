@@ -42,6 +42,14 @@ async function reset() {
 }
 
 async function main() {
+  // Idempotent: only seed an empty database. Safe to run on every deploy.
+  // Set SEED_FORCE=1 to wipe and reseed.
+  const existing = await prisma.workspace.findFirst();
+  if (existing && process.env.SEED_FORCE !== "1") {
+    console.log(`↩︎  Workspace "${existing.slug}" already exists; skipping seed (SEED_FORCE=1 to reseed).`);
+    return;
+  }
+
   await reset();
 
   const workspace = await prisma.workspace.create({
