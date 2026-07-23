@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
-import { getCurrentWorkspace } from "@/lib/workspace";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentWorkspace } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { getBaseUrl } from "@/lib/base-url";
 import { aiEnabled, activeModelChain } from "@/lib/ai";
 import { emailConfigured, emailFrom } from "@/lib/email";

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace } from "@/lib/session";
 import { getBaseUrl } from "@/lib/base-url";
 import { shortDate } from "@/lib/utils";
 import { PageHeader, Card, Icon, Badge, EmptyState } from "@/components/ui";

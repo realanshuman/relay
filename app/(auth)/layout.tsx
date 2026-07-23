@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/session";
 import { Logo, LogoMark } from "@/components/logo";
 import { Icon } from "@/components/ui";
 

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace } from "@/lib/session";
 import { PageHeader } from "@/components/ui";
 import { RepositoriesView } from "@/components/repositories-view";
 

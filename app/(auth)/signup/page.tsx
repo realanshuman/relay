@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
+import { enabledSocialProviders } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Create your account" };
 
@@ -13,7 +14,7 @@ export default function SignupPage() {
       </p>
 
       <div className="mt-8">
-        <AuthForm mode="signup" />
+        <AuthForm mode="signup" providers={enabledSocialProviders()} />
       </div>
 
       <p className="mt-6 text-center text-xs leading-relaxed text-zinc-400">

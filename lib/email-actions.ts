@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "./auth";
+import { getCurrentUser } from "./session";
 import { sendEmail, emailConfigured, testEmail } from "./email";
 
 export interface TestEmailState {

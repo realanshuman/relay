@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getCurrentWorkspace } from "@/lib/workspace";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentWorkspace } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { startOfMonth, timeAgo } from "@/lib/utils";
 import { Card, Icon, EmptyState } from "@/components/ui";
 import { ReleasesTable } from "@/components/releases-table";

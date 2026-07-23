@@ -1,9 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "./db";
-import { getCurrentWorkspace } from "./workspace";
+import { getCurrentWorkspace } from "./session";
 import { generateAssets, refineAsset } from "./ai";
 import { createDraftRelease } from "./releases";
 import { sampleCommits } from "./sample-commits";
@@ -254,7 +255,7 @@ export async function inviteMember(formData: FormData) {
 
   const user = await prisma.user.upsert({
     where: { email },
-    create: { email, name },
+    create: { id: randomUUID(), email, name, emailVerified: false },
     update: {},
   });
 

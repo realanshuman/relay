@@ -1,47 +1,58 @@
-import { cookies } from "next/headers";
-import { randomBytes } from "node:crypto";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./db";
+import { createWorkspaceForUser } from "./workspace";
+import { sendEmail, passwordResetEmail } from "./email";
 
-export { hashPassword, verifyPassword } from "./password";
+// NOTE: this module must stay free of `next/headers` so it can be imported outside a
+// request (e.g. scripts). Request-scoped helpers live in lib/session.ts.
 
-const COOKIE = "relay_session";
-const SESSION_DAYS = 30;
+const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-// --- sessions -------------------------------------------------------------
-
-export async function createSession(userId: string) {
-  const token = randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  await prisma.session.create({ data: { token, userId, expiresAt } });
-  cookies().set(COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: expiresAt,
-  });
+type Provider = { clientId: string; clientSecret: string };
+const socialProviders: Record<string, Provider> = {};
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  socialProviders.github = {
+    clientId: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  };
+}
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  socialProviders.google = {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  };
 }
 
-export async function destroySession() {
-  const token = cookies().get(COOKIE)?.value;
-  if (token) {
-    await prisma.session.deleteMany({ where: { token } });
-    cookies().delete(COOKIE);
-  }
+/** Which social sign-in buttons to show (based on configured env vars). */
+export function enabledSocialProviders() {
+  return { github: "github" in socialProviders, google: "google" in socialProviders };
 }
 
-/** Returns the signed-in user, or null. Clears expired/invalid sessions. */
-export async function getCurrentUser() {
-  const token = cookies().get(COOKIE)?.value;
-  if (!token) return null;
-  const session = await prisma.session.findUnique({
-    where: { token },
-    include: { user: true },
-  });
-  if (!session) return null;
-  if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
-    return null;
-  }
-  return session.user;
-}
+export const auth = betterAuth({
+  appName: "Relay",
+  secret: process.env.BETTER_AUTH_SECRET,
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    sendResetPassword: async ({ user, token }) => {
+      const link = `${appUrl}/reset-password?token=${token}`;
+      await sendEmail({ to: user.email, ...passwordResetEmail(link) });
+    },
+  },
+  socialProviders,
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Every new account gets its own fresh, empty workspace.
+          await createWorkspaceForUser(user.id, user.name || user.email);
+        },
+      },
+    },
+  },
+  // nextCookies() must be last so cookies set inside server actions are forwarded.
+  plugins: [nextCookies()],
+});

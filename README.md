@@ -99,6 +99,8 @@ Copy `.env.example` → `.env.local` for secrets (all optional):
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Postgres connection string (defaults to the docker-compose db in `.env`) |
+| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | Auth signing secret and base URL (required) |
+| `GITHUB_/GOOGLE_CLIENT_ID` + `_SECRET` | Optional social login (buttons appear when set) |
 | `OPENROUTER_API_KEY` | Enables live AI generation via OpenRouter |
 | `OPENROUTER_MODELS` | Override the model fallback chain |
 | `GITHUB_WEBHOOK_SECRET` | Verify `X-Hub-Signature-256` on the webhook |
@@ -111,8 +113,8 @@ pushes the schema and seeds demo data on the first build. Full click-by-click st
 
 ## Tech & structure
 
-Next.js 14 (App Router) · TypeScript · Tailwind · Prisma + Postgres · React Server Components
-with Server Actions for all mutations.
+Next.js 14 (App Router) · TypeScript · Tailwind · Prisma + Postgres · Better Auth
+(email/password + social login) · React Server Components with Server Actions for mutations.
 
 ```
 app/

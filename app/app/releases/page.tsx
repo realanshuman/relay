@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentWorkspace } from "@/lib/session";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
 import { ReleasesTable } from "@/components/releases-table";
 import { cn } from "@/lib/utils";

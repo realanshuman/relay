@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentWorkspace } from "@/lib/workspace";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentWorkspace } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { Sidebar } from "@/components/sidebar";
 import { NewReleaseButton } from "@/components/new-release-button";

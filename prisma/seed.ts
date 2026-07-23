@@ -1,11 +1,31 @@
 import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
 import { generateAssets } from "../lib/ai";
 import { deriveTitle, riskForCommits } from "../lib/ai";
 import { sampleCommits } from "../lib/sample-commits";
-import { hashPassword } from "../lib/password";
 import type { RawCommit } from "../lib/commits";
 
 const prisma = new PrismaClient();
+
+/** Create a Better Auth user; with a password it also gets a credential account for login. */
+async function createUser(opts: { email: string; name: string; password?: string }) {
+  const user = await prisma.user.create({
+    data: { id: randomUUID(), email: opts.email, name: opts.name, emailVerified: true },
+  });
+  if (opts.password) {
+    await prisma.account.create({
+      data: {
+        id: randomUUID(),
+        accountId: user.id,
+        providerId: "credential",
+        userId: user.id,
+        password: await hashPassword(opts.password),
+      },
+    });
+  }
+  return user;
+}
 
 const CURATED: Record<string, RawCommit[]> = {
   "api-2.3.0": [
@@ -39,26 +59,10 @@ async function reset() {
   await prisma.subscriber.deleteMany();
   await prisma.membership.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.verification.deleteMany();
   await prisma.user.deleteMany();
   await prisma.workspace.deleteMany();
-}
-
-/** Keep the demo login working & domain-correct on already-seeded databases (no data loss). */
-async function ensureDemoAccount(workspaceId: string) {
-  const email = "demo@tryrelay.run";
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (!existing) {
-    const demo = await prisma.user.create({
-      data: { email, name: "Demo User", passwordHash: await hashPassword("relaydemo123") },
-    });
-    await prisma.membership.upsert({
-      where: { userId_workspaceId: { userId: demo.id, workspaceId } },
-      create: { userId: demo.id, workspaceId, role: "admin" },
-      update: {},
-    });
-  }
-  // Remove the old-domain demo account if it lingers from an earlier seed.
-  await prisma.user.deleteMany({ where: { email: "demo@relay.app" } });
 }
 
 async function main() {
@@ -66,8 +70,7 @@ async function main() {
   // Set SEED_FORCE=1 to wipe and reseed.
   const existing = await prisma.workspace.findFirst();
   if (existing && process.env.SEED_FORCE !== "1") {
-    await ensureDemoAccount(existing.id);
-    console.log(`↩︎  Workspace "${existing.slug}" already exists; skipping seed (demo login ensured).`);
+    console.log(`↩︎  Workspace "${existing.slug}" already exists; skipping seed (SEED_FORCE=1 to reseed).`);
     return;
   }
 
@@ -85,29 +88,23 @@ async function main() {
     },
   });
 
-  // Team. The demo account and owner share a known password so the app is instantly
-  // explorable; other members have no login. (Sign-up creates real accounts.)
-  const demoHash = await hashPassword("relaydemo123");
-
-  const owner = await prisma.user.create({
-    data: { email: "team@genflix.io", name: "You", passwordHash: demoHash },
-  });
+  // Team. The demo + owner accounts can sign in (password: relaydemo123);
+  // other members are display-only. (Real sign-up creates fresh workspaces.)
+  const demo = await createUser({ email: "demo@tryrelay.run", name: "Demo User", password: "relaydemo123" });
   await prisma.membership.create({
-    data: { userId: owner.id, workspaceId: workspace.id, role: "owner" },
+    data: { userId: demo.id, workspaceId: workspace.id, role: "owner" },
   });
 
-  const demo = await prisma.user.create({
-    data: { email: "demo@tryrelay.run", name: "Demo User", passwordHash: demoHash },
-  });
+  const owner = await createUser({ email: "team@genflix.io", name: "You", password: "relaydemo123" });
   await prisma.membership.create({
-    data: { userId: demo.id, workspaceId: workspace.id, role: "admin" },
+    data: { userId: owner.id, workspaceId: workspace.id, role: "admin" },
   });
 
   for (const [email, name, role] of [
     ["grace@acme.dev", "Grace Hopper", "admin"],
     ["ada@acme.dev", "Ada Lovelace", "member"],
   ] as const) {
-    const u = await prisma.user.create({ data: { email, name } });
+    const u = await createUser({ email, name });
     await prisma.membership.create({
       data: { userId: u.id, workspaceId: workspace.id, role },
     });

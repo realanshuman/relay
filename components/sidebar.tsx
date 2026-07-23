@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { cn, initials } from "@/lib/utils";
-import { signOut } from "@/lib/auth-actions";
+import { authClient } from "@/lib/auth-client";
 import { Icon } from "./ui";
 import { LogoMark } from "./logo";
 
@@ -87,6 +87,14 @@ export function Sidebar({
 
 function UserMenu({ user }: { user: { name: string; email: string } }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  function handleSignOut() {
+    startTransition(async () => {
+      await authClient.signOut();
+      router.push("/login");
+      router.refresh();
+    });
+  }
   return (
     <div className="flex items-center gap-2 rounded-lg px-1.5 py-1.5">
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-[11px] font-semibold text-white">
@@ -97,7 +105,7 @@ function UserMenu({ user }: { user: { name: string; email: string } }) {
         <div className="truncate text-[11px] text-zinc-400">{user.email}</div>
       </div>
       <button
-        onClick={() => startTransition(() => signOut())}
+        onClick={handleSignOut}
         disabled={pending}
         title="Sign out"
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700"
