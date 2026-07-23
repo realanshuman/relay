@@ -4,6 +4,9 @@ const nextConfig = {
     // The project ships without eslint configured; don't block builds on it.
     ignoreDuringBuilds: true,
   },
+  // Don't 308-redirect trailing-slash requests — external API clients (e.g. the
+  // Better Auth dashboard hitting /api/auth/...) must reach the handler directly.
+  skipTrailingSlashRedirect: true,
   experimental: {
     serverActions: {
       bodySizeLimit: "4mb",
