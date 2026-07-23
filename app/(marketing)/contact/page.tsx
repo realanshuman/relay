@@ -1,5 +1,5 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { Mascot } from "@/components/mascot";
 import { Icon } from "@/components/ui";
 import { ContactForm } from "@/components/contact-form";
 
@@ -29,14 +29,20 @@ const CARDS = [
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-      <div className="text-center">
-        <Mascot size={72} className="mx-auto" />
-        <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
-          Say hello
+      <div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-zinc-400 transition hover:text-zinc-700"
+        >
+          <Icon name="ArrowLeft" size={14} />
+          Back home
+        </Link>
+        <h1 className="mt-8 text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl">
+          Get in touch
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-500">
-          We&apos;re a small team and we answer our own email. Whatever it is — feedback, bugs,
-          ideas, or just a changelog you&apos;re proud of — we&apos;d love to hear from you.
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-zinc-500">
+          We&apos;re a small team and we answer our own email. Feedback, bugs, ideas, or a
+          changelog you&apos;re proud of — we&apos;d like to hear it.
         </p>
       </div>
 

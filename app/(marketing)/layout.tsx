@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mascot } from "@/components/mascot";
+import { Logo } from "@/components/logo";
 import { Icon } from "@/components/ui";
 
 const NAV_LINKS = [
@@ -41,9 +41,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-zinc-100 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Mascot size={36} waves={false} />
-            <span className="text-[17px] font-bold tracking-tight">Relay</span>
+          <Link href="/" aria-label="Relay home">
+            <Logo size={28} />
           </Link>
 
           <nav className="hidden items-center gap-8 md:flex">
@@ -58,18 +57,18 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link
-              href="/c/acme"
-              className="hidden text-sm font-medium text-zinc-500 transition hover:text-zinc-900 sm:block"
+              href="/login"
+              className="hidden text-sm font-medium text-zinc-600 transition hover:text-zinc-900 sm:block"
             >
-              Live demo
+              Sign in
             </Link>
             <Link
-              href="/app"
-              className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700"
+              href="/signup"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
             >
-              Open dashboard
+              Get started
               <Icon name="ArrowRight" size={14} />
             </Link>
           </div>
@@ -83,11 +82,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         <div className="mx-auto max-w-6xl px-6 py-14">
           <div className="flex flex-col gap-10 md:flex-row md:justify-between">
             <div className="max-w-xs">
-              <div className="flex items-center gap-2.5">
-                <Mascot size={40} />
-                <span className="text-lg font-bold tracking-tight">Relay</span>
-              </div>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-500">
+              <Logo size={26} />
+              <p className="mt-4 text-sm leading-relaxed text-zinc-500">
                 The AI Release Manager that turns every merged pull request into a polished
                 product release.
               </p>
@@ -118,10 +114,21 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-zinc-200/70 pt-6 text-xs text-zinc-400 sm:flex-row sm:items-center">
-            <span>© {new Date().getFullYear()} Relay. All rights reserved.</span>
-            <span className="flex items-center gap-1.5">
-              Made with <Icon name="Heart" size={12} className="text-rose-400" /> for teams who ship
-            </span>
+            <span>© {new Date().getFullYear()} Relay</span>
+            <div className="flex items-center gap-5">
+              <Link href="/terms" className="transition hover:text-zinc-700">
+                Terms
+              </Link>
+              <Link href="/privacy" className="transition hover:text-zinc-700">
+                Privacy
+              </Link>
+              <a
+                href="mailto:hello@relay.app"
+                className="transition hover:text-zinc-700"
+              >
+                hello@relay.app
+              </a>
+            </div>
           </div>
         </div>
       </footer>

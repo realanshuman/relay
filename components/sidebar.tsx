@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { useTransition } from "react";
+import { cn, initials } from "@/lib/utils";
+import { signOut } from "@/lib/auth-actions";
 import { Icon } from "./ui";
-import { Mascot } from "./mascot";
+import { LogoMark } from "./logo";
 
 const NAV = [
   { href: "/app", label: "Dashboard", icon: "LayoutDashboard", exact: true },
@@ -18,17 +20,19 @@ export function Sidebar({
   workspaceName,
   faviconEmoji,
   slug,
+  user,
 }: {
   workspaceName: string;
   faviconEmoji: string;
   slug: string;
+  user: { name: string; email: string };
 }) {
   const pathname = usePathname();
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
       <Link href="/" className="flex items-center gap-2.5 px-4 py-4" title="Relay home">
-        <Mascot size={34} waves={false} />
+        <LogoMark size={30} />
         <div className="leading-tight">
           <div className="text-sm font-semibold text-zinc-900">Relay</div>
           <div className="text-[11px] text-zinc-400">AI Release Manager</div>
@@ -62,7 +66,7 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="mt-auto p-3">
+      <div className="mt-auto space-y-2 p-3">
         <Link
           href={`/c/${slug}`}
           target="_blank"
@@ -74,7 +78,32 @@ export function Sidebar({
           </span>
           <Icon name="ExternalLink" size={13} className="text-zinc-400" />
         </Link>
+
+        <UserMenu user={user} />
       </div>
     </aside>
+  );
+}
+
+function UserMenu({ user }: { user: { name: string; email: string } }) {
+  const [pending, startTransition] = useTransition();
+  return (
+    <div className="flex items-center gap-2 rounded-lg px-1.5 py-1.5">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-[11px] font-semibold text-white">
+        {initials(user.name)}
+      </span>
+      <div className="min-w-0 flex-1 leading-tight">
+        <div className="truncate text-xs font-semibold text-zinc-800">{user.name}</div>
+        <div className="truncate text-[11px] text-zinc-400">{user.email}</div>
+      </div>
+      <button
+        onClick={() => startTransition(() => signOut())}
+        disabled={pending}
+        title="Sign out"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700"
+      >
+        <Icon name={pending ? "Loader2" : "LogOut"} size={15} className={pending ? "animate-spin" : ""} />
+      </button>
+    </div>
   );
 }

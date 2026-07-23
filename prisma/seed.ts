@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { generateAssets } from "../lib/ai";
 import { deriveTitle, riskForCommits } from "../lib/ai";
 import { sampleCommits } from "../lib/sample-commits";
+import { hashPassword } from "../lib/password";
 import type { RawCommit } from "../lib/commits";
 
 const prisma = new PrismaClient();
@@ -37,6 +38,7 @@ async function reset() {
   await prisma.repository.deleteMany();
   await prisma.subscriber.deleteMany();
   await prisma.membership.deleteMany();
+  await prisma.session.deleteMany();
   await prisma.user.deleteMany();
   await prisma.workspace.deleteMany();
 }
@@ -64,13 +66,24 @@ async function main() {
     },
   });
 
-  // Team
+  // Team. The demo account and owner share a known password so the app is instantly
+  // explorable; other members have no login. (Sign-up creates real accounts.)
+  const demoHash = await hashPassword("relaydemo123");
+
   const owner = await prisma.user.create({
-    data: { email: "team@genflix.io", name: "You", avatarUrl: null },
+    data: { email: "team@genflix.io", name: "You", passwordHash: demoHash },
   });
   await prisma.membership.create({
     data: { userId: owner.id, workspaceId: workspace.id, role: "owner" },
   });
+
+  const demo = await prisma.user.create({
+    data: { email: "demo@relay.app", name: "Demo User", passwordHash: demoHash },
+  });
+  await prisma.membership.create({
+    data: { userId: demo.id, workspaceId: workspace.id, role: "admin" },
+  });
+
   for (const [email, name, role] of [
     ["grace@acme.dev", "Grace Hopper", "admin"],
     ["ada@acme.dev", "Ada Lovelace", "member"],

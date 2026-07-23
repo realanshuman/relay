@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Sidebar } from "@/components/sidebar";
 import { NewReleaseButton } from "@/components/new-release-button";
@@ -10,6 +12,9 @@ import { aiEnabled } from "@/lib/ai";
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
   const workspace = await getCurrentWorkspace();
   const repos = await prisma.repository.findMany({
     where: { workspaceId: workspace.id, connected: true },
@@ -28,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         workspaceName={workspace.name}
         faviconEmoji={workspace.faviconEmoji}
         slug={workspace.slug}
+        user={{ name: user.name, email: user.email }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">

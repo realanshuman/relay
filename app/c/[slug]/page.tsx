@@ -8,6 +8,7 @@ import { AssetType } from "@/lib/constants";
 import { Markdown } from "@/components/markdown";
 import { SubscribeForm } from "@/components/subscribe-form";
 import { Icon } from "@/components/ui";
+import { LogoMark } from "@/components/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -186,13 +187,14 @@ export default async function PublicChangelog({
           <span>
             © {new Date().getFullYear()} {ws.name}
           </span>
-          <span className="flex items-center gap-1.5">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 font-medium text-zinc-500 transition hover:text-zinc-900"
+          >
             Powered by
-            <Link href="/" className="flex items-center gap-1 font-medium text-zinc-500 hover:text-[var(--brand)]">
-              <Icon name="Radio" size={12} />
-              Relay
-            </Link>
-          </span>
+            <LogoMark size={14} />
+            Relay
+          </Link>
         </div>
       </footer>
     </div>
