@@ -47,7 +47,17 @@ try {
   console.log("→ Seeding demo data (only if empty)…");
   run("tsx prisma/seed.ts");
   console.log("✓ Database ready.");
-} catch {
-  console.error("\n✗ Database setup failed. Check that your database is reachable.\n");
+} catch (err) {
+  const msg = String(err?.message || err);
+  if (/foreign key|constraint|migrate|violates/i.test(msg)) {
+    console.error(
+      "\n✗ Schema migration conflict — the database has incompatible existing tables\n" +
+        "  (e.g. an auth-schema change). Reset the schema once, then redeploy:\n" +
+        "    In the Neon SQL editor run:  DROP SCHEMA public CASCADE; CREATE SCHEMA public;\n" +
+        "  See docs/GO-LIVE.md → 'one-time reset'. Existing data is recreated by the seed.\n",
+    );
+  } else {
+    console.error("\n✗ Database setup failed. Check that your database is reachable.\n");
+  }
   process.exit(1);
 }
