@@ -97,7 +97,7 @@ export default function TermsPage() {
       <LegalSection title="10. Contact">
         <p>
           Questions about these Terms? Contact us at{" "}
-          <a href="mailto:hello@relay.app">hello@relay.app</a>.
+          <a href="mailto:hello@tryrelay.run">hello@tryrelay.run</a>.
         </p>
       </LegalSection>
     </LegalPage>

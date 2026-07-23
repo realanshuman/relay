@@ -63,8 +63,8 @@ export default function ContactPage() {
           ))}
           <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/60 p-6 text-sm text-zinc-500">
             <span className="font-semibold text-zinc-700">Prefer plain email?</span> Write to{" "}
-            <a href="mailto:hello@relay.app" className="font-semibold text-indigo-600 underline underline-offset-2">
-              hello@relay.app
+            <a href="mailto:hello@tryrelay.run" className="font-semibold text-indigo-600 underline underline-offset-2">
+              hello@tryrelay.run
             </a>{" "}
             — we typically reply within a couple of days.
           </div>

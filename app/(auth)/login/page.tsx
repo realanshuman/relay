@@ -18,7 +18,7 @@ export default function LoginPage() {
         <Icon name="Info" size={14} className="mt-0.5 shrink-0 text-zinc-400" />
         <span>
           Exploring the demo? Sign in with{" "}
-          <span className="font-medium text-zinc-700">demo@relay.app</span> /{" "}
+          <span className="font-medium text-zinc-700">demo@tryrelay.run</span> /{" "}
           <span className="font-medium text-zinc-700">relaydemo123</span>
         </span>
       </div>

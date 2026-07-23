@@ -92,7 +92,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="8. Contact">
         <p>
-          Privacy questions? Email <a href="mailto:hello@relay.app">hello@relay.app</a>.
+          Privacy questions? Email <a href="mailto:hello@tryrelay.run">hello@tryrelay.run</a>.
         </p>
       </LegalSection>
     </LegalPage>

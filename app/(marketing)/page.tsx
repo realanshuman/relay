@@ -53,7 +53,7 @@ function ProductFrame() {
           <span className="h-2.5 w-2.5 rounded-full bg-zinc-200" />
           <span className="ml-2 flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1 text-[11px] text-zinc-400">
             <Icon name="Lock" size={10} />
-            app.relay.dev/releases/v2.4.0
+            tryrelay.run/app/releases/v2.4.0
           </span>
         </div>
 

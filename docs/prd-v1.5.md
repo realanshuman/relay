@@ -283,7 +283,7 @@ to every third party is not a V1.5 requirement, though the content is prepared s
 This is a genuine selling point, not an afterthought. Every workspace gets a branded page:
 
 ```
-relay.app/acme        or        updates.company.com
+tryrelay.run/acme        or        updates.company.com
 ```
 
 The page feels magical and reads top to bottom:
@@ -386,7 +386,7 @@ Every item above is a deliberate "later," not a "never." V1.5's job is to earn t
 2. Merging into the target branch automatically produces a **draft release** — no manual trigger.
 3. One click on **Generate** produces all nine AI outputs, each with a confidence signal and refinement buttons.
 4. The user can edit any section and **Publish** to a branded public changelog.
-5. The public changelog is live at `relay.app/<workspace>`, is searchable, has an RSS feed, supports email subscribe, and can be mapped to a custom domain.
+5. The public changelog is live at `tryrelay.run/<workspace>`, is searchable, has an RSS feed, supports email subscribe, and can be mapped to a custom domain.
 6. Social/email content is generated and ready to copy or post via API.
 7. Every release is retained in a searchable history.
 

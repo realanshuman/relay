@@ -123,10 +123,10 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 Privacy
               </Link>
               <a
-                href="mailto:hello@relay.app"
+                href="mailto:hello@tryrelay.run"
                 className="transition hover:text-zinc-700"
               >
-                hello@relay.app
+                hello@tryrelay.run
               </a>
             </div>
           </div>

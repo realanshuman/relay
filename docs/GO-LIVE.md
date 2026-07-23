@@ -21,7 +21,7 @@ manually, generate releases (built-in generator), publish, and get a public chan
 | 2 | **OpenRouter** | Live LLM-written notes/posts instead of the deterministic generator | `OPENROUTER_API_KEY` | **Yes** — free models are the default (see below) |
 | 3 | **GitHub App / webhook** | Real automatic release detection on merge (today you add repos by name + can POST the webhook manually) | Point a webhook at `/api/webhooks/github`; set `GITHUB_WEBHOOK_SECRET`. A full GitHub OAuth App is the next step for one-click repo connect | Free |
 | 4 | **Resend** (email) | Real password-reset emails + subscriber notifications (without it, reset works in demo mode by showing the link) | `RESEND_API_KEY`, `EMAIL_FROM` | Free tier (3k emails/mo) |
-| 5 | **Custom domain** | `updates.yourco.com` for the changelog, and correct reset/webhook links | Vercel domain settings; optionally `NEXT_PUBLIC_APP_URL` | Domain cost only |
+| 5 | **Custom domain** | `updates.tryrelay.run` for the changelog, and correct reset/webhook links | Vercel domain settings; optionally `NEXT_PUBLIC_APP_URL` | Domain cost only |
 
 ## Not yet wired (future work)
 

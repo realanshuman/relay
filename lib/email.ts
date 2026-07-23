@@ -14,7 +14,7 @@ export function emailConfigured(): boolean {
 }
 
 export function emailFrom(): string {
-  return process.env.EMAIL_FROM || "Relay <onboarding@resend.dev>";
+  return process.env.EMAIL_FROM || "Relay <noreply@tryrelay.run>";
 }
 
 export function testEmail() {
@@ -31,7 +31,7 @@ export function testEmail() {
 export async function sendEmail({ to, subject, html, text }: SendArgs): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
-  const from = process.env.EMAIL_FROM || "Relay <onboarding@resend.dev>";
+  const from = emailFrom();
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

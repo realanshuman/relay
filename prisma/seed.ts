@@ -43,12 +43,31 @@ async function reset() {
   await prisma.workspace.deleteMany();
 }
 
+/** Keep the demo login working & domain-correct on already-seeded databases (no data loss). */
+async function ensureDemoAccount(workspaceId: string) {
+  const email = "demo@tryrelay.run";
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (!existing) {
+    const demo = await prisma.user.create({
+      data: { email, name: "Demo User", passwordHash: await hashPassword("relaydemo123") },
+    });
+    await prisma.membership.upsert({
+      where: { userId_workspaceId: { userId: demo.id, workspaceId } },
+      create: { userId: demo.id, workspaceId, role: "admin" },
+      update: {},
+    });
+  }
+  // Remove the old-domain demo account if it lingers from an earlier seed.
+  await prisma.user.deleteMany({ where: { email: "demo@relay.app" } });
+}
+
 async function main() {
   // Idempotent: only seed an empty database. Safe to run on every deploy.
   // Set SEED_FORCE=1 to wipe and reseed.
   const existing = await prisma.workspace.findFirst();
   if (existing && process.env.SEED_FORCE !== "1") {
-    console.log(`↩︎  Workspace "${existing.slug}" already exists; skipping seed (SEED_FORCE=1 to reseed).`);
+    await ensureDemoAccount(existing.id);
+    console.log(`↩︎  Workspace "${existing.slug}" already exists; skipping seed (demo login ensured).`);
     return;
   }
 
@@ -78,7 +97,7 @@ async function main() {
   });
 
   const demo = await prisma.user.create({
-    data: { email: "demo@relay.app", name: "Demo User", passwordHash: demoHash },
+    data: { email: "demo@tryrelay.run", name: "Demo User", passwordHash: demoHash },
   });
   await prisma.membership.create({
     data: { userId: demo.id, workspaceId: workspace.id, role: "admin" },

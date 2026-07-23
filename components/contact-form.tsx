@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Icon } from "./ui";
 
-const CONTACT_EMAIL = "hello@relay.app";
+const CONTACT_EMAIL = "hello@tryrelay.run";
 
 export function ContactForm() {
   const [name, setName] = useState("");

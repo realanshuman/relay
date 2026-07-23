@@ -63,7 +63,7 @@ async function callOpenRouter(system: string, user: string): Promise<string | nu
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${key}`,
-          "HTTP-Referer": "https://relay.app",
+          "HTTP-Referer": "https://tryrelay.run",
           "X-Title": "Relay",
         },
         body: JSON.stringify({
