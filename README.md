@@ -19,6 +19,7 @@ workflow. See [`docs/prd-v1.5.md`](docs/prd-v1.5.md) for the full product spec.
 Relay uses Postgres. The easiest local database is the bundled docker-compose one:
 
 ```bash
+cp .env.example .env   # local config (already points at the docker-compose db)
 docker compose up -d   # start local Postgres (or point DATABASE_URL at any Postgres)
 npm install            # install dependencies
 npm run setup          # generate client, push schema, seed demo data
