@@ -107,7 +107,7 @@ export default async function DashboardPage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-900">Latest Releases</h2>
           <Link
-            href="/releases"
+            href="/app/releases"
             className="flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-[var(--brand)]"
           >
             View all

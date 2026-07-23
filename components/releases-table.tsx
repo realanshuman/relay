@@ -40,7 +40,7 @@ export function ReleasesTable({
           {releases.map((r) => (
             <tr key={r.id} className="group transition-colors hover:bg-zinc-50/70">
               <td className="px-4 py-3">
-                <Link href={`/releases/${r.id}`} className="block">
+                <Link href={`/app/releases/${r.id}`} className="block">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[13px] font-semibold text-zinc-900">
                       {r.version}
@@ -81,7 +81,7 @@ export function ReleasesTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <Link
-                  href={`/releases/${r.id}`}
+                  href={`/app/releases/${r.id}`}
                   className="inline-flex items-center gap-1 text-xs font-medium text-zinc-400 transition group-hover:text-[var(--brand)]"
                 >
                   Open

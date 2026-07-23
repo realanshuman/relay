@@ -92,7 +92,7 @@ export default async function ReleaseDetailPage({
   return (
     <div>
       <Link
-        href="/releases"
+        href="/app/releases"
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800"
       >
         <Icon name="ArrowLeft" size={15} />
@@ -137,7 +137,7 @@ export default async function ReleaseDetailPage({
           return (
             <Link
               key={t.key}
-              href={`/releases/${release.id}?tab=${t.key}`}
+              href={`/app/releases/${release.id}?tab=${t.key}`}
               className={cn(
                 "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium transition",
                 active

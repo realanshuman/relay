@@ -39,7 +39,8 @@ prisma generate  →  prisma db push  →  seed (once, idempotent)  →  next bu
 5. **Deploy.** The first build creates the schema and seeds the demo workspace.
 
 6. **Open it.**
-   - App: `https://<your-app>.vercel.app`
+   - Landing page: `https://<your-app>.vercel.app`
+   - App: `https://<your-app>.vercel.app/app`
    - Public changelog: `https://<your-app>.vercel.app/c/acme`
 
 ## After deploy

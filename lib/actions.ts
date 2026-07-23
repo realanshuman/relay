@@ -103,7 +103,7 @@ export async function refineReleaseAsset(
     data: { aiCredits: { decrement: 1 } },
   });
 
-  revalidatePath(`/releases/${releaseId}`);
+  revalidatePath(`/app/releases/${releaseId}`);
 }
 
 export async function saveReleaseAsset(releaseId: string, type: AssetType, content: string) {
@@ -111,12 +111,12 @@ export async function saveReleaseAsset(releaseId: string, type: AssetType, conte
     where: { releaseId_type: { releaseId, type } },
     data: { content, edited: true },
   });
-  revalidatePath(`/releases/${releaseId}`);
+  revalidatePath(`/app/releases/${releaseId}`);
 }
 
 export async function updateReleaseMeta(releaseId: string, data: { title?: string }) {
   await prisma.release.update({ where: { id: releaseId }, data });
-  revalidatePath(`/releases/${releaseId}`);
+  revalidatePath(`/app/releases/${releaseId}`);
 }
 
 export async function publishRelease(releaseId: string, channels: ChannelType[]) {
@@ -161,7 +161,7 @@ export async function unpublishRelease(releaseId: string) {
 export async function deleteRelease(releaseId: string) {
   await prisma.release.delete({ where: { id: releaseId } });
   revalidateApp();
-  redirect("/releases");
+  redirect("/app/releases");
 }
 
 /** Manual "New release" — simulates a merged PR batch and drafts a release. */
@@ -176,7 +176,7 @@ export async function createReleaseForRepo(formData: FormData) {
   });
 
   revalidateApp();
-  redirect(`/releases/${release.id}`);
+  redirect(`/app/releases/${release.id}`);
 }
 
 // --- Repositories ---------------------------------------------------------
@@ -206,7 +206,7 @@ export async function toggleAutoPublish(repositoryId: string, value: boolean) {
     where: { id: repositoryId },
     data: { autoPublish: value },
   });
-  revalidatePath("/repositories");
+  revalidatePath("/app/repositories");
 }
 
 export async function removeRepository(repositoryId: string) {
@@ -263,12 +263,12 @@ export async function inviteMember(formData: FormData) {
     create: { userId: user.id, workspaceId: ws.id, role },
     update: { role },
   });
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
 }
 
 export async function removeMember(membershipId: string) {
   await prisma.membership.delete({ where: { id: membershipId } });
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
 }
 
 // --- Public changelog subscribe ------------------------------------------

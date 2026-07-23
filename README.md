@@ -28,7 +28,8 @@ npm run dev            # start the app at http://localhost:3000
 
 Then open:
 
-- **App** — http://localhost:3000 (dashboard, releases, repositories, changelog admin, settings)
+- **Landing page** — http://localhost:3000 (marketing site: hero, about, contact, terms)
+- **App** — http://localhost:3000/app (dashboard, releases, repositories, changelog admin, settings)
 - **Public changelog** — http://localhost:3000/c/acme
 
 > No Docker? Set `DATABASE_URL` to any Postgres connection string (e.g. a free Neon database)
@@ -115,7 +116,8 @@ with Server Actions for all mutations.
 
 ```
 app/
-  (app)/            Authenticated app shell + pages (dashboard, releases, repositories, …)
+  (marketing)/      Landing page, about, contact, terms, privacy
+  app/              Authenticated app shell + pages (dashboard, releases, repositories, …)
   c/[slug]/         Public changelog + RSS feed
   api/webhooks/     GitHub webhook (release detection)
 components/         UI: sidebar, tables, asset editor, publish panel, generate panel, …

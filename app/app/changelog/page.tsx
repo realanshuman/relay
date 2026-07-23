@@ -66,7 +66,7 @@ export default async function ChangelogPage() {
             ) : (
               <p className="mt-2 text-xs text-zinc-400">
                 Add a custom domain in{" "}
-                <Link href="/settings" className="text-[var(--brand)] underline underline-offset-2">
+                <Link href="/app/settings" className="text-[var(--brand)] underline underline-offset-2">
                   Settings → Branding
                 </Link>
                 .
@@ -83,7 +83,7 @@ export default async function ChangelogPage() {
                 {published.map((r) => (
                   <li key={r.id}>
                     <Link
-                      href={`/releases/${r.id}`}
+                      href={`/app/releases/${r.id}`}
                       className="flex items-center justify-between px-4 py-3 transition hover:bg-zinc-50"
                     >
                       <div className="flex items-center gap-3">

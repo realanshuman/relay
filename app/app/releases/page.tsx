@@ -49,7 +49,7 @@ export default async function ReleasesPage({
           return (
             <Link
               key={f.key}
-              href={f.key === "all" ? "/releases" : `/releases?status=${f.key}`}
+              href={f.key === "all" ? "/app/releases" : `/app/releases?status=${f.key}`}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-medium transition",
                 active

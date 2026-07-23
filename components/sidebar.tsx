@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Icon } from "./ui";
+import { Mascot } from "./mascot";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: "LayoutDashboard", exact: true },
-  { href: "/releases", label: "Releases", icon: "Rocket" },
-  { href: "/repositories", label: "Repositories", icon: "Package" },
-  { href: "/changelog", label: "Public Changelog", icon: "Globe" },
-  { href: "/settings", label: "Settings", icon: "Settings" },
+  { href: "/app", label: "Dashboard", icon: "LayoutDashboard", exact: true },
+  { href: "/app/releases", label: "Releases", icon: "Rocket" },
+  { href: "/app/repositories", label: "Repositories", icon: "Package" },
+  { href: "/app/changelog", label: "Public Changelog", icon: "Globe" },
+  { href: "/app/settings", label: "Settings", icon: "Settings" },
 ];
 
 export function Sidebar({
@@ -26,15 +27,13 @@ export function Sidebar({
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <div className="flex items-center gap-2.5 px-4 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--brand)] to-[var(--brand)]/70 text-sm text-white shadow-sm">
-          <Icon name="Radio" size={17} />
-        </div>
+      <Link href="/" className="flex items-center gap-2.5 px-4 py-4" title="Relay home">
+        <Mascot size={34} waves={false} />
         <div className="leading-tight">
           <div className="text-sm font-semibold text-zinc-900">Relay</div>
           <div className="text-[11px] text-zinc-400">AI Release Manager</div>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex flex-col gap-0.5 px-2.5 py-2">
         {NAV.map((item) => {
