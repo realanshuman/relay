@@ -12,6 +12,7 @@ const NAV = [
   { href: "/app", label: "Dashboard", icon: "LayoutDashboard", exact: true },
   { href: "/app/releases", label: "Releases", icon: "Rocket" },
   { href: "/app/repositories", label: "Repositories", icon: "Package" },
+  { href: "/app/integrations", label: "Integrations", icon: "Blocks" },
   { href: "/app/changelog", label: "Public Changelog", icon: "Globe" },
   { href: "/app/settings", label: "Settings", icon: "Settings" },
 ];

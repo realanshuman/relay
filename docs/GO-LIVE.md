@@ -55,9 +55,12 @@ Notes:
 
 These are UI-complete or stubbed, and are the honest "not real yet" list:
 
-- **One-click GitHub repo connect** — today repos are added by `owner/name`. GitHub *sign-in*
-  now works (via Better Auth social login), but a GitHub App is still needed to let users pick
-  from their repos and auto-install the webhook.
+- **GitHub webhook auto-install** — the **Integrations** page now lets a user connect GitHub
+  (OAuth) and pick repositories from a list to import (no more typing `owner/name`). What's still
+  manual is the webhook: a GitHub *App* would auto-install the push webhook per repo so releases
+  detect automatically. Until then, point a webhook at `/api/webhooks/github` (see Settings).
+  Requires a GitHub OAuth app — set `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` (callback
+  `<BETTER_AUTH_URL>/api/auth/callback/github`).
 - **Auto-posting to social channels** — Relay generates ready-to-copy / API-ready content for
   Twitter/LinkedIn/Discord/Telegram; it does not post to them for you yet. The changelog and
   (with Resend) email are the fully-automated channels.

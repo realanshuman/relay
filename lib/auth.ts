@@ -48,12 +48,15 @@ function buildTrustedOrigins(): string[] {
   return Array.from(origins);
 }
 
-type Provider = { clientId: string; clientSecret: string };
+type Provider = { clientId: string; clientSecret: string; scope?: string[] };
 const socialProviders: Record<string, Provider> = {};
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   socialProviders.github = {
     clientId: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    // `repo` lets Relay list a user's repositories (and later create GitHub Releases);
+    // `read:user`/`user:email` cover profile + email at sign-in.
+    scope: ["read:user", "user:email", "repo"],
   };
 }
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -88,6 +91,15 @@ export const auth = betterAuth({
     },
   },
   socialProviders,
+  // Let a signed-in user link GitHub from the Integrations page even when their
+  // GitHub email differs from their Relay login email.
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["github", "google"],
+      allowDifferentEmails: true,
+    },
+  },
   databaseHooks: {
     user: {
       create: {

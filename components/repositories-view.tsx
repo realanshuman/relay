@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { Toggle } from "./toggle";
 import { Badge, Icon } from "./ui";
@@ -36,32 +37,49 @@ function ConnectButton() {
 export function RepositoriesView({ repos }: { repos: Repo[] }) {
   return (
     <div className="space-y-6">
-      <form
-        action={addRepository}
-        className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-end"
-      >
-        <div className="flex-1">
-          <label className="label">Repository</label>
-          <div className="relative">
-            <Icon
-              name="Github"
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
-            />
-            <input
-              name="fullName"
-              placeholder="owner/repository"
-              className="input pl-9"
-              required
-            />
+      <div className="card p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-sm font-semibold text-zinc-900">Add repositories</div>
+            <p className="text-sm text-zinc-500">
+              Connect GitHub once and pick your repos — no need to type <code>owner/repo</code>.
+            </p>
           </div>
+          <Link href="/app/integrations" className="btn-brand shrink-0">
+            <Icon name="Github" size={16} />
+            Import from GitHub
+          </Link>
         </div>
-        <div className="w-full sm:w-40">
-          <label className="label">Target branch</label>
-          <input name="targetBranch" placeholder="main" defaultValue="main" className="input" />
-        </div>
-        <ConnectButton />
-      </form>
+
+        <details className="mt-3 border-t border-zinc-100 pt-3">
+          <summary className="cursor-pointer select-none text-xs font-medium text-zinc-500 hover:text-zinc-700">
+            Add one manually instead
+          </summary>
+          <form action={addRepository} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <label className="label">Repository</label>
+              <div className="relative">
+                <Icon
+                  name="Github"
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                />
+                <input
+                  name="fullName"
+                  placeholder="owner/repository"
+                  className="input pl-9"
+                  required
+                />
+              </div>
+            </div>
+            <div className="w-full sm:w-40">
+              <label className="label">Target branch</label>
+              <input name="targetBranch" placeholder="main" defaultValue="main" className="input" />
+            </div>
+            <ConnectButton />
+          </form>
+        </details>
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         {repos.map((repo) => (

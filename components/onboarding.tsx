@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Icon } from "./ui";
-import { SubmitButton } from "./submit-button";
-import { addRepository } from "@/lib/actions";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -67,23 +65,16 @@ export function Onboarding({ firstName, repoCount, releaseCount, publishedCount 
 
       <div className="divide-y divide-zinc-100">
         <StepRow done={repoCount > 0} index={1} title="Connect a repository">
-          <form action={addRepository} className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative flex-1">
-              <Icon
-                name="Github"
-                size={15}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
-              />
-              <input
-                name="fullName"
-                placeholder="owner/repository"
-                required
-                className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5"
-              />
-            </div>
-            <input type="hidden" name="targetBranch" value="main" />
-            <SubmitButton icon="Plus">Connect</SubmitButton>
-          </form>
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-zinc-500">
+              Connect GitHub and pick the repositories Relay should watch — no need to type
+              owner/repo by hand.
+            </p>
+            <Link href="/app/integrations" className="btn-brand">
+              <Icon name="Github" size={15} />
+              Connect GitHub
+            </Link>
+          </div>
         </StepRow>
 
         <StepRow done={releaseCount > 0} index={2} title="Detect your first release">
