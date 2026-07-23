@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --brand: #6366f1;
+  --brand-soft: #eef2ff;
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --border: #e4e4e7;
+  --ink: #18181b;
+  --muted: #71717a;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 999px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-zinc-200 bg-white shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-brand {
+    @apply btn bg-[var(--brand)] px-3.5 py-2 text-white hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn border border-zinc-200 bg-white px-3 py-2 text-zinc-700 hover:bg-zinc-50;
+  }
+  .btn-subtle {
+    @apply btn px-2.5 py-1.5 text-zinc-600 hover:bg-zinc-100;
+  }
+  .input {
+    @apply w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)];
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium text-zinc-600;
+  }
+}
+
+/* Markdown rendering for notes / changelog / public page */
+.prose {
+  @apply text-[15px] leading-relaxed text-zinc-700;
+}
+.prose h1 {
+  @apply mb-3 mt-6 text-2xl font-bold text-zinc-900;
+}
+.prose h2 {
+  @apply mb-2 mt-6 flex items-center gap-2 text-lg font-semibold text-zinc-900;
+}
+.prose h3 {
+  @apply mb-2 mt-5 text-base font-semibold text-zinc-900;
+}
+.prose p {
+  @apply my-3;
+}
+.prose ul {
+  @apply my-3 space-y-1.5 pl-5;
+}
+.prose ul li {
+  @apply list-disc marker:text-zinc-300;
+}
+.prose ol {
+  @apply my-3 list-decimal space-y-1.5 pl-5;
+}
+.prose strong {
+  @apply font-semibold text-zinc-900;
+}
+.prose a {
+  @apply font-medium text-[var(--brand)] underline underline-offset-2;
+}
+.prose code {
+  @apply rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[13px] text-zinc-800;
+}
+.prose hr {
+  @apply my-6 border-zinc-200;
+}
+.prose blockquote {
+  @apply border-l-2 border-zinc-200 pl-4 text-zinc-500;
+}
+
+.prose-invert {
+  @apply text-zinc-300;
+}
+.prose-invert h1,
+.prose-invert h2,
+.prose-invert h3,
+.prose-invert strong {
+  @apply text-white;
+}
+.prose-invert code {
+  @apply bg-white/10 text-zinc-100;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  @apply relative overflow-hidden bg-zinc-100;
+}
+.skeleton::after {
+  content: "";
+  @apply absolute inset-0 -translate-x-full;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: shimmer 1.4s infinite;
+}

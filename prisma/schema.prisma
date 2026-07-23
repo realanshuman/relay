@@ -1,0 +1,137 @@
+// Relay V1.5 data model — see docs/prd-v1.5.md §10
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id           String  @id @default(cuid())
+  name         String
+  slug         String  @unique
+  tagline      String?
+  customDomain String?
+  logoUrl      String?
+  primaryColor String  @default("#6366f1")
+  accentColor  String  @default("#8b5cf6")
+  faviconEmoji String  @default("🚀")
+  aiCredits    Int     @default(500)
+  createdAt    DateTime @default(now())
+
+  repositories Repository[]
+  releases     Release[]
+  members      Membership[]
+  subscribers  Subscriber[]
+}
+
+model User {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  name      String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  memberships Membership[]
+}
+
+model Membership {
+  id          String @id @default(cuid())
+  role        String @default("member") // owner | admin | member
+  userId      String
+  workspaceId String
+  createdAt   DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Repository {
+  id                  String  @id @default(cuid())
+  name                String
+  fullName            String // owner/name
+  provider            String  @default("github")
+  targetBranch        String  @default("main")
+  connected           Boolean @default(true)
+  autoPublish         Boolean @default(false)
+  latestCommit        String?
+  latestCommitMessage String?
+  latestCommitAt      DateTime?
+  workspaceId         String
+  createdAt           DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  releases  Release[]
+}
+
+model Release {
+  id            String  @id @default(cuid())
+  version       String
+  title         String?
+  status        String  @default("draft") // draft | generating | ready | published
+  publishStatus String  @default("unpublished") // unpublished | published
+  risk          String  @default("low") // low | medium | high
+  confidence    Int? // 0-100
+  releaseDate   DateTime @default(now())
+  publishedAt   DateTime?
+  workspaceId   String
+  repositoryId  String
+  createdAt     DateTime @default(now())
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository     Repository      @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  commits        Commit[]
+  assets         ReleaseAsset[]
+  publishTargets PublishTarget[]
+}
+
+model Commit {
+  id        String @id @default(cuid())
+  sha       String
+  message   String
+  author    String
+  releaseId String
+
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+}
+
+model ReleaseAsset {
+  id         String @id @default(cuid())
+  type       String // release_notes | changelog | summary | twitter | linkedin | discord | telegram | email | banner_image
+  content    String @default("")
+  confidence Int    @default(0)
+  edited     Boolean @default(false)
+  releaseId  String
+  updatedAt  DateTime @updatedAt
+
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, type])
+}
+
+model PublishTarget {
+  id          String  @id @default(cuid())
+  channel     String // website | twitter | linkedin | discord | telegram | email
+  status      String  @default("pending") // pending | ready | published
+  publishedAt DateTime?
+  releaseId   String
+
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, channel])
+}
+
+model Subscriber {
+  id          String @id @default(cuid())
+  email       String
+  workspaceId String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, email])
+}
