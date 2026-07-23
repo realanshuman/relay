@@ -35,17 +35,21 @@ With these two, users can sign up (email/password), connect repos manually, gene
 
 ## Better Auth dashboard (the `@better-auth/infra` plugin)
 
-The plugin is installed and auth now runs on Better Auth, so it's ready to enable. Because it
-needs a project key from the Better Auth dashboard (which only you can create) and adds its own
-tables, finish it with these steps:
+The `dash()` plugin is **already wired** in `lib/auth.ts`. It activates only when
+`BETTER_AUTH_API_KEY` is set and adds no database tables, so finishing it is just:
 
-1. Create a project at the Better Auth dashboard (better-auth.com) and copy its API key.
-2. In `lib/auth.ts`, add the server plugin to the `plugins: [...]` array (before `nextCookies()`),
-   e.g. `import { dash, sentinel } from "@better-auth/infra"` then `dash({ apiKey: process.env.BETTER_AUTH_INFRA_KEY! })`.
-3. Add the matching client plugin from `@better-auth/infra/client` in `lib/auth-client.ts`.
-4. Generate its tables: `npx @better-auth/cli generate` (updates `prisma/schema.prisma`), then
-   `prisma db push`.
-5. Set `BETTER_AUTH_INFRA_KEY` in Vercel and redeploy.
+1. Copy the API key from your Better Auth dashboard project.
+2. In Vercel → **Settings → Environment Variables**, add `BETTER_AUTH_API_KEY`.
+3. **Redeploy**, then click **Retry connection** in the dashboard.
+
+Notes:
+- The dashboard verifies against `https://tryrelay.run/api/auth`, so the Better Auth migration
+  must be deployed first (see the one-time reset note above). A "server returned a redirect"
+  error usually means it isn't deployed yet, or the domain is redirecting — point the dashboard
+  at the exact canonical `https://` origin.
+- Want bot/abuse protection too? Add `sentinel()` from `@better-auth/infra` to the `plugins`
+  array in `lib/auth.ts` (it may add tables — run `npx @better-auth/cli generate` then
+  `prisma db push`).
 
 ## Not yet wired (future work)
 

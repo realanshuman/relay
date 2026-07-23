@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { dash } from "@better-auth/infra";
 import { prisma } from "./db";
 import { createWorkspaceForUser } from "./workspace";
 import { sendEmail, passwordResetEmail } from "./email";
@@ -30,6 +31,12 @@ export function enabledSocialProviders() {
   return { github: "github" in socialProviders, google: "google" in socialProviders };
 }
 
+// Better Auth dashboard (@better-auth/infra). Enabled only when BETTER_AUTH_API_KEY is set;
+// dash() reads that key from the environment. nextCookies() must stay last.
+const plugins: Array<ReturnType<typeof dash> | ReturnType<typeof nextCookies>> = [];
+if (process.env.BETTER_AUTH_API_KEY) plugins.push(dash());
+plugins.push(nextCookies());
+
 export const auth = betterAuth({
   appName: "Relay",
   secret: process.env.BETTER_AUTH_SECRET,
@@ -53,6 +60,5 @@ export const auth = betterAuth({
       },
     },
   },
-  // nextCookies() must be last so cookies set inside server actions are forwarded.
-  plugins: [nextCookies()],
+  plugins,
 });
