@@ -71,7 +71,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             Password
           </label>
           {mode === "login" && (
-            <span className="text-xs text-zinc-400">Min. 8 characters</span>
+            <Link href="/forgot-password" className="text-xs font-medium text-zinc-500 hover:text-zinc-900">
+              Forgot password?
+            </Link>
           )}
         </div>
         <div className="relative">

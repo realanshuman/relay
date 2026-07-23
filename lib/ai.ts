@@ -34,10 +34,13 @@ export interface GeneratedAsset {
   confidence: number;
 }
 
+// Free models on OpenRouter (no per-token cost; rate-limited). Tried in order, with
+// the deterministic generator as the final fallback so Relay always produces output.
+// Override with OPENROUTER_MODELS to use paid models for higher quality / throughput.
 const DEFAULT_MODELS = [
-  "google/gemini-flash-1.5",
-  "deepseek/deepseek-chat",
-  "qwen/qwen-2.5-72b-instruct",
+  "deepseek/deepseek-chat-v3-0324:free",
+  "google/gemini-2.0-flash-exp:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
 ];
 
 export function aiEnabled(): boolean {

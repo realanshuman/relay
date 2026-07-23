@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/db";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentUser } from "@/lib/auth";
 import { getBaseUrl } from "@/lib/base-url";
 import { aiEnabled, activeModelChain } from "@/lib/ai";
 import { initials } from "@/lib/utils";
 import { PageHeader, Card, Icon, Badge } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import { CopyButton } from "@/components/copy-button";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import {
   updateBranding,
   updateWorkspaceSlug,
@@ -43,7 +45,7 @@ function Section({
 }
 
 export default async function SettingsPage() {
-  const ws = await getCurrentWorkspace();
+  const [ws, user] = await Promise.all([getCurrentWorkspace(), getCurrentUser()]);
   const baseUrl = getBaseUrl();
   const members = await prisma.membership.findMany({
     where: { workspaceId: ws.id },
@@ -54,9 +56,23 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Manage your workspace, team, and branding." icon="Settings" />
+      <PageHeader title="Settings" subtitle="Manage your account, workspace, team, and branding." icon="Settings" />
 
       <div className="grid gap-5 lg:grid-cols-2">
+        {/* Account */}
+        <Section title="Account" description="Your personal profile and password." icon="UserCircle">
+          <div className="mb-4 flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white">
+              {initials(user?.name ?? "?")}
+            </span>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-zinc-900">{user?.name}</div>
+              <div className="truncate text-xs text-zinc-500">{user?.email}</div>
+            </div>
+          </div>
+          <ChangePasswordForm />
+        </Section>
+
         {/* Workspace */}
         <Section title="Workspace" description="Your changelog's URL slug." icon="Building2">
           <form action={updateWorkspaceSlug} className="space-y-3">

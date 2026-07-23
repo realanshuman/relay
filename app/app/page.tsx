@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getCurrentUser } from "@/lib/auth";
 import { startOfMonth, timeAgo } from "@/lib/utils";
 import { Card, Icon, EmptyState } from "@/components/ui";
 import { ReleasesTable } from "@/components/releases-table";
+import { Onboarding } from "@/components/onboarding";
 
 function StatCard({
   label,
@@ -39,40 +41,63 @@ function StatCard({
 }
 
 export default async function DashboardPage() {
-  const ws = await getCurrentWorkspace();
+  const [ws, user] = await Promise.all([getCurrentWorkspace(), getCurrentUser()]);
+  const firstName = (user?.name || "there").split(/\s+/)[0];
 
-  const [repoCount, monthCount, latestPublished, unpublishedCount, latestReleases] =
-    await Promise.all([
-      prisma.repository.count({ where: { workspaceId: ws.id, connected: true } }),
-      prisma.release.count({
-        where: { workspaceId: ws.id, publishedAt: { gte: startOfMonth() } },
-      }),
-      prisma.release.findFirst({
-        where: { workspaceId: ws.id, publishStatus: "published" },
-        orderBy: { publishedAt: "desc" },
-        include: { repository: true },
-      }),
-      prisma.release.count({
-        where: { workspaceId: ws.id, status: "ready", publishStatus: "unpublished" },
-      }),
-      prisma.release.findMany({
-        where: { workspaceId: ws.id },
-        orderBy: { releaseDate: "desc" },
-        take: 6,
-        include: { repository: { select: { name: true } } },
-      }),
-    ]);
+  const [
+    repoCount,
+    monthCount,
+    latestPublished,
+    unpublishedCount,
+    latestReleases,
+    totalReleases,
+    publishedCount,
+  ] = await Promise.all([
+    prisma.repository.count({ where: { workspaceId: ws.id, connected: true } }),
+    prisma.release.count({
+      where: { workspaceId: ws.id, publishedAt: { gte: startOfMonth() } },
+    }),
+    prisma.release.findFirst({
+      where: { workspaceId: ws.id, publishStatus: "published" },
+      orderBy: { publishedAt: "desc" },
+      include: { repository: true },
+    }),
+    prisma.release.count({
+      where: { workspaceId: ws.id, status: "ready", publishStatus: "unpublished" },
+    }),
+    prisma.release.findMany({
+      where: { workspaceId: ws.id },
+      orderBy: { releaseDate: "desc" },
+      take: 6,
+      include: { repository: { select: { name: true } } },
+    }),
+    prisma.release.count({ where: { workspaceId: ws.id } }),
+    prisma.release.count({ where: { workspaceId: ws.id, publishStatus: "published" } }),
+  ]);
+
+  const showOnboarding = publishedCount === 0;
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
-          Good to see you 👋
+          {showOnboarding ? `Welcome, ${firstName}` : `Good to see you, ${firstName}`}
         </h1>
         <p className="mt-0.5 text-sm text-zinc-500">
-          Here's what's shipping across {ws.name}.
+          {showOnboarding
+            ? "Let's get your first release out the door."
+            : `Here's what's shipping across ${ws.name}.`}
         </p>
       </div>
+
+      {showOnboarding && (
+        <Onboarding
+          firstName={firstName}
+          repoCount={repoCount}
+          releaseCount={totalReleases}
+          publishedCount={publishedCount}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard label="Repositories" value={repoCount} icon="Package" sub="connected" />
