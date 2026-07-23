@@ -3,6 +3,8 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { getCurrentUser } from "@/lib/auth";
 import { getBaseUrl } from "@/lib/base-url";
 import { aiEnabled, activeModelChain } from "@/lib/ai";
+import { emailConfigured, emailFrom } from "@/lib/email";
+import { EmailSettings } from "@/components/email-settings";
 import { initials } from "@/lib/utils";
 import { PageHeader, Card, Icon, Badge } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
@@ -182,6 +184,15 @@ export default async function SettingsPage() {
             <code className="rounded bg-zinc-100 px-1 py-0.5">GITHUB_WEBHOOK_SECRET</code> to verify
             signatures.
           </p>
+        </Section>
+
+        {/* Email */}
+        <Section
+          title="Email"
+          description="Powers password resets and subscriber notifications."
+          icon="Mail"
+        >
+          <EmailSettings configured={emailConfigured()} from={emailFrom()} />
         </Section>
 
         {/* Billing */}

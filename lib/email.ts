@@ -13,6 +13,21 @@ export function emailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
+export function emailFrom(): string {
+  return process.env.EMAIL_FROM || "Relay <onboarding@resend.dev>";
+}
+
+export function testEmail() {
+  return {
+    subject: "Your Relay sender is working ✓",
+    text: "This is a test email from Relay. If you received this, your email sender is configured correctly.",
+    html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#18181b">Your sender is working ✓</h2>
+      <p style="color:#52525b;line-height:1.6">This is a test email from Relay. If it reached your inbox, password-reset and subscriber emails will send correctly from your domain.</p>
+    </div>`,
+  };
+}
+
 export async function sendEmail({ to, subject, html, text }: SendArgs): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
