@@ -44,6 +44,19 @@ export async function sendEmail({ to, subject, html, text }: SendArgs): Promise<
   }
 }
 
+export function otpEmail(code: string) {
+  return {
+    subject: `Your Relay code: ${code}`,
+    text: `Your Relay verification code is ${code}. It expires in 5 minutes.\n\nIf you didn't request this, you can ignore this email.`,
+    html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#18181b">Your sign-in code</h2>
+      <p style="color:#52525b;line-height:1.6">Enter this code to continue. It expires in 5 minutes.</p>
+      <div style="font-size:30px;font-weight:700;letter-spacing:8px;color:#18181b;background:#f4f4f5;border-radius:12px;padding:16px 24px;text-align:center;margin:16px 0">${code}</div>
+      <p style="color:#a1a1aa;font-size:13px;margin-top:24px">If you didn't request this, you can safely ignore this email.</p>
+    </div>`,
+  };
+}
+
 export function passwordResetEmail(link: string) {
   return {
     subject: "Reset your Relay password",

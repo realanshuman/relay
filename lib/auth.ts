@@ -1,10 +1,11 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { emailOTP } from "better-auth/plugins";
 import { dash } from "@better-auth/infra";
 import { prisma } from "./db";
 import { createWorkspaceForUser } from "./workspace";
-import { sendEmail, passwordResetEmail } from "./email";
+import { sendEmail, passwordResetEmail, otpEmail } from "./email";
 
 // NOTE: this module must stay free of `next/headers` so it can be imported outside a
 // request (e.g. scripts). Request-scoped helpers live in lib/session.ts.
@@ -73,8 +74,21 @@ export function enabledSocialProviders() {
 
 // Better Auth dashboard (@better-auth/infra). Enabled only when BETTER_AUTH_API_KEY is set;
 // dash() reads that key from the environment. nextCookies() must stay last.
-const plugins: Array<ReturnType<typeof dash> | ReturnType<typeof nextCookies>> = [];
+const plugins: Array<
+  ReturnType<typeof dash> | ReturnType<typeof emailOTP> | ReturnType<typeof nextCookies>
+> = [];
 if (process.env.BETTER_AUTH_API_KEY) plugins.push(dash());
+// Email-first sign-in: a 6-digit code is emailed; signing in creates the account
+// if it's new. Password sign-in stays available as a fallback.
+plugins.push(
+  emailOTP({
+    otpLength: 6,
+    expiresIn: 300,
+    sendVerificationOTP: async ({ email, otp }) => {
+      await sendEmail({ to: email, ...otpEmail(otp) });
+    },
+  }),
+);
 plugins.push(nextCookies());
 
 export const auth = betterAuth({
