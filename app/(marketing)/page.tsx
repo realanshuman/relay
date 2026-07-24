@@ -1,7 +1,17 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
+import {
+  Container,
+  Eyebrow,
+  SectionHead,
+  ButtonPrimary,
+  ButtonGhost,
+  MonoChip,
+  LiveDot,
+  HeroProduct,
+  Pipeline,
+} from "@/components/marketing";
 
 export const metadata: Metadata = {
   title: "Relay: Your AI Release Manager",
@@ -9,166 +19,54 @@ export const metadata: Metadata = {
     "Relay turns every merged pull request into a polished release: notes, changelog, announcements, and a branded changelog page. Review, publish, done.",
 };
 
-/* ------------------------------- primitives ------------------------------- */
-
-function ButtonPrimary({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800"
-    >
-      {children}
-    </Link>
-  );
-}
-
-function ButtonGhost({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
-    >
-      {children}
-    </Link>
-  );
-}
-
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[13px] font-semibold uppercase tracking-wider text-indigo-600">{children}</p>
-  );
-}
-
-/* ------------------------------- hero shot -------------------------------- */
-// Hand-built product frame (pure CSS): no screenshots, crisp on every screen.
-
-function ProductFrame() {
-  return (
-    <div className="mx-auto w-full max-w-3xl">
-      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_1px_0_rgba(0,0,0,0.02),0_12px_40px_-12px_rgba(0,0,0,0.18)]">
-        {/* title bar */}
-        <div className="flex items-center gap-2 border-b border-zinc-100 px-4 py-2.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-200" />
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-200" />
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-200" />
-          <span className="ml-2 flex items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 py-1 text-[11px] text-zinc-400">
-            <Icon name="Lock" size={10} />
-            tryrelay.run/app/releases/v2.4.0
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-[1.15fr,0.85fr]">
-          {/* release */}
-          <div className="border-b border-zinc-100 p-5 sm:border-b-0 sm:border-r">
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-zinc-100 px-2 py-0.5 font-mono text-xs font-semibold text-zinc-700">
-                v2.4.0
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Ready to publish
-              </span>
-            </div>
-            <h4 className="mt-4 text-sm font-semibold text-zinc-900">What&apos;s New</h4>
-            <div className="mt-2 space-y-1.5">
-              {[92, 74, 62].map((w) => (
-                <div key={w} className="h-1.5 rounded-full bg-zinc-100" style={{ width: `${w}%` }} />
-              ))}
-            </div>
-            <h4 className="mt-4 text-sm font-semibold text-zinc-900">Bug Fixes</h4>
-            <div className="mt-2 space-y-1.5">
-              {[80, 56].map((w) => (
-                <div key={w} className="h-1.5 rounded-full bg-zinc-100" style={{ width: `${w}%` }} />
-              ))}
-            </div>
-            <div className="mt-5 flex items-center justify-between border-t border-zinc-100 pt-3">
-              <span className="text-[11px] font-medium text-zinc-400">AI confidence</span>
-              <span className="text-[11px] font-semibold text-zinc-600">92%</span>
-            </div>
-          </div>
-
-          {/* generated assets */}
-          <div className="p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-              Generated
-            </p>
-            <div className="mt-3 space-y-1.5">
-              {[
-                { icon: "FileText", label: "Release notes" },
-                { icon: "GitBranch", label: "Changelog entry" },
-                { icon: "Twitter", label: "Announcement post" },
-                { icon: "Mail", label: "Subscriber email" },
-                { icon: "Image", label: "Banner image" },
-              ].map((a) => (
-                <div key={a.label} className="flex items-center justify-between py-0.5">
-                  <span className="flex items-center gap-2 text-[13px] text-zinc-600">
-                    <Icon name={a.icon} size={13} className="text-zinc-400" />
-                    {a.label}
-                  </span>
-                  <Icon name="Check" size={13} className="text-emerald-500" />
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 w-full rounded-lg bg-zinc-900 py-2 text-center text-xs font-semibold text-white">
-              Publish to 6 channels
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* --------------------------------- data ---------------------------------- */
 
 const STEPS = [
   {
     n: "01",
     title: "Connect a repository",
-    body: "Point Relay at a GitHub repo and pick your release branch. Setup takes about a minute, and your workflow doesn't change.",
+    body: "One click with GitHub. Pick the repos Relay should watch. Your workflow doesn't change at all.",
   },
   {
     n: "02",
-    title: "Merge as usual",
-    body: "When a pull request lands, Relay reads the commits, understands what shipped, and drafts the release for you automatically.",
+    title: "Merge like you always do",
+    body: "When a pull request lands, Relay reads the commits and drafts the whole release while you're still in the PR thread.",
   },
   {
     n: "03",
     title: "Review and publish",
-    body: "Edit anything, adjust the tone with one click, and publish to your changelog and every channel from a single screen.",
+    body: "Fix a word, adjust the tone, hit publish. Your changelog, subscribers, and announcement drafts update from one screen.",
   },
 ];
 
-const FEATURES = [
+const WORKS_WITH = [
+  { icon: "Github", label: "GitHub" },
+  { icon: "Sparkles", label: "OpenRouter" },
+  { icon: "Mail", label: "Resend" },
+  { icon: "Rss", label: "RSS" },
+  { icon: "Globe", label: "Your domain" },
+];
+
+const FAQS = [
   {
-    icon: "GitBranch",
-    title: "Automatic release detection",
-    body: "Every push to your release branch becomes a draft. No triggers to wire up, no workflows to maintain.",
+    q: "Do I have to change how my team works?",
+    a: "No. Relay watches the branch you already merge to. There are no new commands, no CI steps, and nothing to add to your PR template. Merge as usual; the draft is waiting in Relay.",
   },
   {
-    icon: "FileText",
-    title: "Notes written for customers",
-    body: "What's New, Bug Fixes, Performance, Breaking Changes, and migration steps, all in plain language instead of commit-speak.",
+    q: "What does the AI actually read?",
+    a: "Commit messages and pull request titles on your release branch. It understands conventional commits (feat, fix, perf, breaking) but plain English works too. It never invents features that are not in the commits.",
   },
   {
-    icon: "Megaphone",
-    title: "Announcements per channel",
-    body: "Twitter, LinkedIn, Discord, Telegram and an email draft, each written in the right voice for the audience.",
+    q: "Can I edit what it writes?",
+    a: "Everything. Each asset is a draft you can edit directly or nudge with one click: shorter, more technical, more customer friendly. Nothing is published until you hit publish.",
   },
   {
-    icon: "Image",
-    title: "A banner for every version",
-    body: "Generated in your brand colors so each release ships with artwork, not just a wall of text.",
+    q: "Do I need my own AI key?",
+    a: "No. Relay ships with a built-in generator that works with zero configuration. Add an OpenRouter key when you want live LLM writing; free models are the default chain.",
   },
   {
-    icon: "SlidersHorizontal",
-    title: "Refine in one click",
-    body: "Shorter. More technical. More customer-friendly. Nudge any draft without opening a settings panel.",
-  },
-  {
-    icon: "Globe",
-    title: "A changelog worth sharing",
-    body: "Branded, searchable, and SEO-friendly, with RSS and email subscriptions. Host it on your own domain.",
+    q: "What does it cost?",
+    a: "Relay is free while in public beta. When paid plans arrive, there will always be a way to publish your first releases without a card.",
   },
 ];
 
@@ -179,139 +77,259 @@ export default function LandingPage() {
     <div>
       {/* =============================== HERO ============================== */}
       <section className="relative overflow-hidden border-b border-zinc-100">
-        {/* decorative backdrop: faint grid + soft brand glow */}
+        {/* dotted baseline grid + soft glow */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.035)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_65%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
-          <div className="absolute left-1/2 top-[-12%] h-[440px] w-[760px] max-w-full -translate-x-1/2 rounded-full bg-indigo-400/15 blur-[110px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(24,24,27,0.05)_1px,transparent_1px)] bg-[size:22px_22px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#000_50%,transparent_100%)]" />
+          <div className="absolute left-1/2 top-[-10%] h-[420px] w-[720px] max-w-full -translate-x-1/2 rounded-full bg-indigo-400/12 blur-[110px]" />
         </div>
-        <div className="mx-auto max-w-5xl px-6 pb-16 pt-20 text-center sm:pt-24">
+
+        <Container className="pb-24 pt-20 text-center sm:pt-24 lg:pb-28">
           <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 text-xs font-medium text-zinc-600 shadow-sm backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Now in free public beta
+            <LiveDot />
+            Free while in public beta
           </span>
 
-          <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight text-zinc-900 sm:text-[56px]">
-            Every merge deserves
-            <br className="hidden sm:block" /> a real release.
+          <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-zinc-950 sm:text-[56px]">
+            You merge the PR.
+            <br />
+            Relay writes the release.
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-zinc-500">
-            Relay is your AI Release Manager. It reads what you shipped and writes the release
-            notes, changelog, announcements, and banner, so you just review, publish, and move on.
+            Relay reads what shipped and drafts the release notes, changelog, announcement
+            posts, and banner. You review, publish, and get back to building.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <ButtonPrimary href="/signup">
-              Get started free
+              Start shipping releases
               <Icon name="ArrowRight" size={15} />
             </ButtonPrimary>
             <ButtonGhost href="/c/acme">
               <Icon name="Globe" size={15} className="text-zinc-400" />
-              View a live changelog
+              See a live changelog
             </ButtonGhost>
           </div>
           <p className="mt-4 text-[13px] text-zinc-400">
-            No credit card required. Publish your first release in minutes.
+            No credit card. First release published in minutes.
           </p>
 
-          <div className="mt-14">
-            <ProductFrame />
+          <div className="mt-16">
+            <HeroProduct />
           </div>
-        </div>
+        </Container>
       </section>
 
-      {/* ============================== METRICS =========================== */}
-      <section className="border-b border-zinc-100 bg-zinc-50/60">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 divide-x divide-zinc-200/70 px-6 py-10 sm:grid-cols-4">
-          {[
-            ["1", "merge to trigger it"],
-            ["9", "assets per release"],
-            ["6", "channels, one screen"],
-            ["0", "workflows to configure"],
-          ].map(([big, small]) => (
-            <div key={small} className="px-4 text-center first:pl-0 last:pr-0">
-              <p className="text-3xl font-semibold tracking-tight text-zinc-900">{big}</p>
-              <p className="mt-1 text-[13px] text-zinc-500">{small}</p>
-            </div>
-          ))}
-        </div>
+      {/* ============================ WORKS WITH =========================== */}
+      <section className="border-b border-zinc-100">
+        <Container className="flex flex-col items-center gap-5 py-10 sm:flex-row sm:justify-between">
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-400">
+            Plays well with
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {WORKS_WITH.map((w) => (
+              <span key={w.label} className="flex items-center gap-2 text-sm font-medium text-zinc-400 transition hover:text-zinc-700">
+                <Icon name={w.icon} size={16} />
+                {w.label}
+              </span>
+            ))}
+          </div>
+        </Container>
       </section>
 
-      {/* ============================ HOW IT WORKS ======================== */}
+      {/* ============================ HOW IT WORKS ========================= */}
       <section id="how" className="scroll-mt-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-          <div className="max-w-2xl">
-            <Eyebrow>How it works</Eyebrow>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-              Your release process, without the busywork
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              No agent settings and no automation builder. You merge, and Relay takes it from
-              commits to a published release.
-            </p>
+        <Container className="py-20 sm:py-24">
+          <SectionHead
+            eyebrow="How it works"
+            title="Your release process, minus the busywork"
+            lede="No automation builder, no agent settings. You merge, and Relay carries it from commits to a published release."
+          />
+
+          <div className="mt-12 rounded-2xl border border-zinc-200 bg-zinc-50/50 px-6 py-8 sm:px-10">
+            <Pipeline />
           </div>
 
-          <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-3">
+          <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-200 sm:grid-cols-3">
             {STEPS.map((s) => (
-              <div key={s.n} className="bg-white p-7 transition-colors hover:bg-zinc-50/70">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 font-mono text-sm font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-100">
-                  {s.n}
-                </span>
-                <h3 className="mt-4 text-lg font-semibold text-zinc-900">{s.title}</h3>
+              <div key={s.n} className="group bg-white p-7 transition-colors hover:bg-zinc-50/70">
+                <span className="font-mono text-xs font-semibold text-indigo-600">{s.n}</span>
+                <h3 className="mt-3 text-lg font-semibold text-zinc-950">{s.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-500">{s.body}</p>
               </div>
             ))}
           </div>
-        </div>
+        </Container>
       </section>
 
-      {/* ============================== FEATURES ========================== */}
-      <section id="product" className="scroll-mt-20 border-b border-zinc-100 bg-zinc-50/60">
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-          <div className="max-w-2xl">
-            <Eyebrow>The product</Eyebrow>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-              Everything a release needs, nothing to babysit
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              Relay does one workflow exceptionally well, and every piece of it is yours to edit
-              before it ships.
-            </p>
-          </div>
+      {/* ========================== FEATURES (BENTO) ======================= */}
+      <section id="product" className="scroll-mt-20 border-b border-zinc-100 bg-zinc-50/50">
+        <Container className="py-20 sm:py-24">
+          <SectionHead
+            eyebrow="What you get"
+            title="Nine assets per release, written for humans"
+            lede="Everything a proper release needs, drafted the moment the merge lands. Every piece is yours to edit before it ships."
+          />
 
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="group rounded-xl border border-zinc-200 bg-white p-6 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.15)]"
-              >
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-950 text-white shadow-sm ring-1 ring-inset ring-white/10 transition-colors group-hover:from-indigo-500 group-hover:to-indigo-700">
-                  <Icon name={f.icon} size={18} />
-                </span>
-                <h3 className="mt-4 font-semibold text-zinc-900">{f.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">{f.body}</p>
+          <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-6">
+            {/* Large: release notes */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-4">
+              <div className="flex flex-col gap-6 sm:flex-row">
+                <div className="sm:w-[45%]">
+                  <Icon name="FileText" size={18} className="text-indigo-600" />
+                  <h3 className="mt-3 font-semibold text-zinc-950">Notes people actually read</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                    What&apos;s New, Bug Fixes, Performance, Breaking Changes, and migration
+                    steps. Written in plain language, not commit-speak.
+                  </p>
+                </div>
+                <div className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50/60 p-4 text-[12px] leading-relaxed">
+                  <p className="font-semibold text-zinc-800">✨ What&apos;s New</p>
+                  <p className="mt-1 text-zinc-600">
+                    <span className="font-medium text-zinc-800">Passkey sign-in.</span> Skip the
+                    password. Works with Face ID and fingerprint.
+                  </p>
+                  <p className="mt-2.5 font-semibold text-zinc-800">⚡ Performance</p>
+                  <p className="mt-1 text-zinc-600">
+                    Dashboards load about twice as fast on large workspaces.
+                  </p>
+                  <p className="mt-2.5 flex items-center justify-between border-t border-zinc-200 pt-2 text-[11px] text-zinc-400">
+                    <span>release_notes.md</span>
+                    <span className="font-mono">confidence 94%</span>
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Breaking changes */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-2">
+              <Icon name="AlertTriangle" size={18} className="text-amber-500" />
+              <h3 className="mt-3 font-semibold text-zinc-950">Breaking changes flagged</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                A <span className="font-mono text-[12px] text-zinc-700">feat!:</span> commit marks
+                the release high risk and drafts the migration notes for you.
+              </p>
+              <div className="mt-4 rounded-lg border border-amber-200/70 bg-amber-50/60 px-3 py-2 font-mono text-[11px] text-amber-800">
+                feat(api)!: scoped tokens
+              </div>
+            </div>
+
+            {/* Channels */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-2">
+              <Icon name="Megaphone" size={18} className="text-indigo-600" />
+              <h3 className="mt-3 font-semibold text-zinc-950">One voice per channel</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                A thread for X, a post for LinkedIn, a note for Discord, an email for
+                subscribers. Each written for its audience.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {["Twitter", "LinkedIn", "Discord", "Telegram", "Email"].map((c) => (
+                  <MonoChip key={c}>{c}</MonoChip>
+                ))}
+              </div>
+            </div>
+
+            {/* Refine */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-2">
+              <Icon name="SlidersHorizontal" size={18} className="text-indigo-600" />
+              <h3 className="mt-3 font-semibold text-zinc-950">Refine with one click</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                Not quite right? Nudge any draft without rewriting it yourself.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {["Shorter", "More technical", "Friendlier", "Regenerate"].map((b) => (
+                  <span
+                    key={b}
+                    className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-[11px] font-medium text-zinc-600"
+                  >
+                    {b}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Banner */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-2">
+              <Icon name="Image" size={18} className="text-indigo-600" />
+              <h3 className="mt-3 font-semibold text-zinc-950">A banner for every version</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                Generated in your brand colors, so each release ships with artwork.
+              </p>
+              <div className="mt-4 flex h-14 flex-col justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 px-3">
+                <span className="font-mono text-[8px] font-semibold uppercase tracking-widest text-white/70">
+                  Acme
+                </span>
+                <span className="text-xs font-bold text-white">What&apos;s new in v2.4.0</span>
+              </div>
+            </div>
+
+            {/* Auto-detection */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-2">
+              <Icon name="GitMerge" size={18} className="text-indigo-600" />
+              <h3 className="mt-3 font-semibold text-zinc-950">Detection you don&apos;t configure</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                Every push to your release branch becomes a draft. No triggers, no YAML, no
+                workflows to maintain.
+              </p>
+              <div className="mt-4 flex items-center gap-2 font-mono text-[11px] text-zinc-500">
+                <LiveDot />
+                watching <span className="text-zinc-800">acme/web</span> on{" "}
+                <MonoChip>main</MonoChip>
+              </div>
+            </div>
+
+            {/* Changelog */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-7 md:col-span-4">
+              <div className="flex flex-col gap-6 sm:flex-row">
+                <div className="sm:w-[45%]">
+                  <Icon name="Globe" size={18} className="text-indigo-600" />
+                  <h3 className="mt-3 font-semibold text-zinc-950">A changelog worth linking</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                    Branded, searchable, on your own domain. RSS and email subscriptions are
+                    built in, so shipping becomes your marketing.
+                  </p>
+                </div>
+                <div className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[11px] text-zinc-500">
+                      updates.<span className="text-zinc-800">yourcompany</span>.com
+                    </span>
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-zinc-400">
+                      <Icon name="Rss" size={11} />
+                      RSS
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {[
+                      ["v2.4.0", "Passkeys and a faster dashboard", "Today"],
+                      ["v2.3.0", "Scoped API tokens", "Last week"],
+                    ].map(([v, t, when]) => (
+                      <div key={v} className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-zinc-100">
+                        <MonoChip>{v}</MonoChip>
+                        <span className="truncate text-[12px] font-medium text-zinc-700">{t}</span>
+                        <span className="ml-auto shrink-0 text-[10px] text-zinc-400">{when}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </Container>
       </section>
 
-      {/* =========================== DEEP DIVE: AI ======================== */}
+      {/* =========================== THE INTELLIGENCE ====================== */}
       <section className="border-b border-zinc-100">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-6 py-20 sm:py-24 lg:grid-cols-2">
+        <Container className="grid grid-cols-1 items-center gap-12 py-20 sm:py-24 lg:grid-cols-2">
           <div>
-            <Eyebrow>The intelligence</Eyebrow>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-              Reads commits like an engineer. Writes like your best communicator.
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              Relay parses your commits and pull requests, then turns them into words a customer
-              actually wants to read. There&apos;s nothing to configure. No models to pick, no
-              prompts to tune.
-            </p>
-            <ul className="mt-7 space-y-3.5">
+            <SectionHead
+              eyebrow="The intelligence"
+              title="Reads commits like an engineer. Writes like your best communicator."
+              lede="Relay parses commits and PR titles, then turns them into words a customer wants to read. Nothing to configure: no model pickers, no prompt tuning."
+            />
+            <ul className="mt-8 space-y-3.5">
               {[
-                "Understands conventional commits, PR titles and plain-English messages",
+                "Understands conventional commits, PR titles, and plain English",
                 "Flags breaking changes and drafts the migration notes",
                 "Scores every asset with a confidence rating before you publish",
               ].map((t) => (
@@ -324,30 +342,30 @@ export default function LandingPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_12px_40px_-20px_rgba(24,24,27,0.15)]">
               <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
                 <span className="flex items-center gap-2 text-sm font-semibold text-zinc-800">
                   <Icon name="Twitter" size={15} className="text-zinc-400" />
                   Announcement
                 </span>
-                <span className="text-xs font-medium text-zinc-400">91% confidence</span>
+                <span className="font-mono text-xs text-zinc-400">91% confidence</span>
               </div>
               <p className="mt-3 text-sm leading-relaxed text-zinc-600">
                 Acme v2.4.0 is out. Passkey sign-in means no more passwords, the dashboard loads
-                40% faster, and dark mode is now everywhere. Full notes in the thread.
+                twice as fast, and API tokens are now scoped. Full notes in the thread.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {["Regenerate", "Shorter", "More technical", "Friendlier"].map((b) => (
                   <span
                     key={b}
-                    className="rounded-md border border-zinc-200 px-2.5 py-1 text-[11px] font-medium text-zinc-500"
+                    className="rounded-md border border-zinc-200 px-2.5 py-1 text-[11px] font-medium text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-800"
                   >
                     {b}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5">
               <span className="flex items-center gap-2 text-sm font-semibold text-amber-800">
                 <Icon name="AlertTriangle" size={15} />
                 Breaking change detected
@@ -361,61 +379,12 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ======================= DEEP DIVE: CHANGELOG ===================== */}
-      <section className="border-b border-zinc-100 bg-zinc-50/60">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-6 py-20 sm:py-24 lg:grid-cols-2">
-          <div className="order-last lg:order-first">
-            <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-              <div className="border-b border-zinc-100 px-6 py-4">
-                <p className="text-sm font-semibold text-zinc-900">Acme Changelog</p>
-                <p className="text-xs text-zinc-400">updates.acme.com · RSS · Subscribe</p>
-              </div>
-              <div className="divide-y divide-zinc-100">
-                {[
-                  ["v2.4.0", "Passkeys, dark mode and a faster dashboard", "Today"],
-                  ["v2.3.0", "Scoped API tokens with a migration guide", "Last week"],
-                  ["v2.2.0", "Usage-based pricing tiers", "3 weeks ago"],
-                ].map(([v, t, d]) => (
-                  <div key={v} className="flex items-start gap-3 px-6 py-3.5">
-                    <span className="mt-0.5 rounded-md bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-zinc-600">
-                      {v}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-zinc-800">{t}</p>
-                      <p className="text-xs text-zinc-400">{d}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Eyebrow>The public changelog</Eyebrow>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-              A changelog customers actually visit
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              Every workspace gets a branded release page that is searchable, SEO-friendly, and
-              ready with RSS and email subscriptions built in. Put it on your own domain and let
-              your shipping speak for itself.
-            </p>
-            <div className="mt-7">
-              <ButtonPrimary href="/c/acme">
-                See the live demo
-                <Icon name="ArrowUpRight" size={15} />
-              </ButtonPrimary>
-            </div>
-          </div>
-        </div>
+        </Container>
       </section>
 
       {/* ============================== STORY ============================= */}
       <section className="bg-zinc-950 text-white">
-        <div className="mx-auto max-w-3xl px-6 py-20 sm:py-28">
+        <Container className="max-w-3xl py-20 sm:py-28">
           <LogoMark size={40} invert />
           <h2 className="mt-8 text-3xl font-semibold leading-snug tracking-tight sm:text-4xl">
             Shipping is the easy part. Telling people is where releases stall.
@@ -424,43 +393,78 @@ export default function LandingPage() {
             <p>
               Every team we know runs the same ritual. The feature ships, the channel fills with
               emoji, and someone says &ldquo;we should announce this.&rdquo; Then it doesn&apos;t
-              happen. The changelog falls behind, the post never goes out, and customers find your
-              best work by accident.
+              happen. The changelog falls behind, the post never goes out, and customers find
+              your best work by accident.
             </p>
             <p>
               We built Relay because the work you ship deserves better than silence, and because
-              nobody became an engineer to write launch posts. Relay reads what actually changed
-              and gives every release the attention it deserves, automatically.
+              nobody became an engineer to write launch posts.
             </p>
           </div>
-          <Link
+          <a
             href="/about"
             className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-zinc-300"
           >
             Read the full story
             <Icon name="ArrowRight" size={15} />
-          </Link>
-        </div>
+          </a>
+        </Container>
+      </section>
+
+      {/* =============================== FAQ ============================== */}
+      <section className="border-b border-zinc-100">
+        <Container className="max-w-3xl py-20 sm:py-24">
+          <SectionHead eyebrow="Questions" title="Answers, without the sales call" center />
+          <div className="mt-10 divide-y divide-zinc-100 border-y border-zinc-100">
+            {FAQS.map((f) => (
+              <details key={f.q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-zinc-900 [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-zinc-400 transition group-open:rotate-45 group-open:border-zinc-300 group-open:text-zinc-700">
+                    <Icon name="Plus" size={13} />
+                  </span>
+                </summary>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-zinc-500">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </Container>
       </section>
 
       {/* =============================== CTA ============================== */}
       <section>
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
-          <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-zinc-200 bg-zinc-50/60 px-8 py-10 text-center sm:flex-row sm:text-left">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+        <Container className="py-20 sm:py-24">
+          <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-950 px-8 py-12 text-center sm:py-14">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:20px_20px]"
+            />
+            <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-40 w-[480px] -translate-x-1/2 rounded-full bg-indigo-500/25 blur-[90px]" />
+            <div className="relative">
+              <Eyebrow>
+                <span className="text-zinc-400">Ship the story too</span>
+              </Eyebrow>
+              <h2 className="mx-auto mt-4 max-w-xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                 Turn your next merge into a launch
               </h2>
-              <p className="mt-2 text-zinc-500">
-                Connect a repository and publish your first release today.
+              <p className="mx-auto mt-3 max-w-md text-zinc-400">
+                Connect a repository and publish your first release today. Free in beta.
               </p>
-            </div>
-            <div className="flex shrink-0 gap-3">
-              <ButtonPrimary href="/signup">Get started free</ButtonPrimary>
-              <ButtonGhost href="/contact">Contact us</ButtonGhost>
+              <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <ButtonPrimary href="/signup" className="bg-white text-zinc-950 hover:bg-zinc-200">
+                  Get started free
+                  <Icon name="ArrowRight" size={15} />
+                </ButtonPrimary>
+                <ButtonGhost
+                  href="/contact"
+                  className="border-zinc-700 bg-transparent text-zinc-300 hover:border-zinc-500 hover:bg-zinc-900"
+                >
+                  Talk to us
+                </ButtonGhost>
+              </div>
             </div>
           </div>
-        </div>
+        </Container>
       </section>
     </div>
   );

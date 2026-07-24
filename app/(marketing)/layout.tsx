@@ -45,6 +45,9 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 The AI Release Manager that turns every merged pull request into a polished
                 product release.
               </p>
+              <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+                You ship it. Relay tells it.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
