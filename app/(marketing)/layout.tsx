@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { Icon } from "@/components/ui";
-
-const NAV_LINKS = [
-  { href: "/#product", label: "Product" },
-  { href: "/#how", label: "How it works" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-];
+import { MarketingNav } from "@/components/marketing-nav";
 
 const FOOTER_COLS: { title: string; links: { href: string; label: string; external?: boolean }[] }[] = [
   {
@@ -38,42 +31,7 @@ const FOOTER_COLS: { title: string; links: { href: string; label: string; extern
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 border-b border-zinc-100 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" aria-label="Relay home">
-            <Logo size={28} />
-          </Link>
-
-          <nav className="hidden items-center gap-8 md:flex">
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="text-sm font-medium text-zinc-500 transition hover:text-zinc-900"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link
-              href="/login"
-              className="hidden text-sm font-medium text-zinc-600 transition hover:text-zinc-900 sm:block"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
-            >
-              Get started
-              <Icon name="ArrowRight" size={14} />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingNav />
 
       <main>{children}</main>
 

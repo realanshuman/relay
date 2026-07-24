@@ -4,9 +4,9 @@ import { Icon } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
 
 export const metadata: Metadata = {
-  title: "Relay — Your AI Release Manager",
+  title: "Relay: Your AI Release Manager",
   description:
-    "Relay turns every merged pull request into a polished release — notes, changelog, announcements and a branded changelog page. Review, publish, done.",
+    "Relay turns every merged pull request into a polished release: notes, changelog, announcements, and a branded changelog page. Review, publish, done.",
 };
 
 /* ------------------------------- primitives ------------------------------- */
@@ -40,7 +40,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 }
 
 /* ------------------------------- hero shot -------------------------------- */
-// Hand-built product frame (pure CSS) — no screenshots, crisp on every screen.
+// Hand-built product frame (pure CSS): no screenshots, crisp on every screen.
 
 function ProductFrame() {
   return (
@@ -148,7 +148,7 @@ const FEATURES = [
   {
     icon: "FileText",
     title: "Notes written for customers",
-    body: "What's New, Bug Fixes, Performance, Breaking Changes and migration steps — in plain language, not commit-speak.",
+    body: "What's New, Bug Fixes, Performance, Breaking Changes, and migration steps, all in plain language instead of commit-speak.",
   },
   {
     icon: "Megaphone",
@@ -168,7 +168,7 @@ const FEATURES = [
   {
     icon: "Globe",
     title: "A changelog worth sharing",
-    body: "Branded, searchable and SEO-friendly, with RSS and email subscriptions — hosted on your own domain.",
+    body: "Branded, searchable, and SEO-friendly, with RSS and email subscriptions. Host it on your own domain.",
   },
 ];
 
@@ -178,11 +178,16 @@ export default function LandingPage() {
   return (
     <div>
       {/* =============================== HERO ============================== */}
-      <section className="border-b border-zinc-100">
+      <section className="relative overflow-hidden border-b border-zinc-100">
+        {/* decorative backdrop: faint grid + soft brand glow */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.035)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_65%_55%_at_50%_0%,#000_55%,transparent_100%)]" />
+          <div className="absolute left-1/2 top-[-12%] h-[440px] w-[760px] max-w-full -translate-x-1/2 rounded-full bg-indigo-400/15 blur-[110px]" />
+        </div>
         <div className="mx-auto max-w-5xl px-6 pb-16 pt-20 text-center sm:pt-24">
-          <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600">
+          <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 text-xs font-medium text-zinc-600 shadow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            Public beta — free while we&apos;re building
+            Now in free public beta
           </span>
 
           <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight text-zinc-900 sm:text-[56px]">
@@ -192,7 +197,7 @@ export default function LandingPage() {
 
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-zinc-500">
             Relay is your AI Release Manager. It reads what you shipped and writes the release
-            notes, changelog, announcements and banner — so you review, publish, and move on.
+            notes, changelog, announcements, and banner, so you just review, publish, and move on.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -241,16 +246,18 @@ export default function LandingPage() {
               Your release process, without the busywork
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              No agent settings and no automation builder. You merge — Relay takes it from
+              No agent settings and no automation builder. You merge, and Relay takes it from
               commits to a published release.
             </p>
           </div>
 
           <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-3">
             {STEPS.map((s) => (
-              <div key={s.n} className="bg-white p-7">
-                <span className="font-mono text-sm font-semibold text-indigo-600">{s.n}</span>
-                <h3 className="mt-3 text-lg font-semibold text-zinc-900">{s.title}</h3>
+              <div key={s.n} className="bg-white p-7 transition-colors hover:bg-zinc-50/70">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 font-mono text-sm font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-100">
+                  {s.n}
+                </span>
+                <h3 className="mt-4 text-lg font-semibold text-zinc-900">{s.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-500">{s.body}</p>
               </div>
             ))}
@@ -267,16 +274,19 @@ export default function LandingPage() {
               Everything a release needs, nothing to babysit
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              Relay does one workflow exceptionally well — and every piece of it is yours to edit
+              Relay does one workflow exceptionally well, and every piece of it is yours to edit
               before it ships.
             </p>
           </div>
 
           <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-xl border border-zinc-200 bg-white p-6">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-white">
-                  <Icon name={f.icon} size={17} />
+              <div
+                key={f.title}
+                className="group rounded-xl border border-zinc-200 bg-white p-6 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.15)]"
+              >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-950 text-white shadow-sm ring-1 ring-inset ring-white/10 transition-colors group-hover:from-indigo-500 group-hover:to-indigo-700">
+                  <Icon name={f.icon} size={18} />
                 </span>
                 <h3 className="mt-4 font-semibold text-zinc-900">{f.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">{f.body}</p>
@@ -296,7 +306,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-zinc-500">
               Relay parses your commits and pull requests, then turns them into words a customer
-              actually wants to read. There&apos;s nothing to configure — no models to pick, no
+              actually wants to read. There&apos;s nothing to configure. No models to pick, no
               prompts to tune.
             </p>
             <ul className="mt-7 space-y-3.5">
@@ -343,10 +353,11 @@ export default function LandingPage() {
                 Breaking change detected
               </span>
               <p className="mt-2 text-sm leading-relaxed text-amber-900/80">
+                From{" "}
                 <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs text-amber-900">
                   feat(api)!: scoped tokens
-                </code>{" "}
-                — Relay drafted migration notes and marked this release high risk.
+                </code>
+                , Relay drafted migration notes and marked this release high risk.
               </p>
             </div>
           </div>
@@ -388,9 +399,9 @@ export default function LandingPage() {
               A changelog customers actually visit
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-zinc-500">
-              Every workspace gets a branded release page — searchable, SEO-friendly, with RSS and
-              email subscriptions built in. Put it on your own domain and let your shipping speak
-              for itself.
+              Every workspace gets a branded release page that is searchable, SEO-friendly, and
+              ready with RSS and email subscriptions built in. Put it on your own domain and let
+              your shipping speak for itself.
             </p>
             <div className="mt-7">
               <ButtonPrimary href="/c/acme">
@@ -417,7 +428,7 @@ export default function LandingPage() {
               best work by accident.
             </p>
             <p>
-              We built Relay because the work you ship deserves better than silence — and because
+              We built Relay because the work you ship deserves better than silence, and because
               nobody became an engineer to write launch posts. Relay reads what actually changed
               and gives every release the attention it deserves, automatically.
             </p>
