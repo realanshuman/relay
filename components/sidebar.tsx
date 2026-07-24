@@ -8,31 +8,47 @@ import { authClient } from "@/lib/auth-client";
 import { Icon } from "./ui";
 import { LogoMark } from "./logo";
 
-const NAV = [
-  { href: "/app", label: "Dashboard", icon: "LayoutDashboard", exact: true },
-  { href: "/app/releases", label: "Releases", icon: "Rocket" },
-  { href: "/app/repositories", label: "Repositories", icon: "Package" },
-  { href: "/app/integrations", label: "Integrations", icon: "Blocks" },
-  { href: "/app/changelog", label: "Public Changelog", icon: "Globe" },
-  { href: "/app/settings", label: "Settings", icon: "Settings" },
+type NavItem = { href: string; label: string; icon: string; exact?: boolean };
+type NavGroup = { label: string | null; items: NavItem[] };
+
+const NAV: NavGroup[] = [
+  { label: null, items: [{ href: "/app", label: "Dashboard", icon: "LayoutDashboard", exact: true }] },
+  {
+    label: "Releases",
+    items: [
+      { href: "/app/releases", label: "Releases", icon: "Rocket" },
+      { href: "/app/changelog", label: "Public Changelog", icon: "Globe" },
+    ],
+  },
+  {
+    label: "Sources",
+    items: [
+      { href: "/app/repositories", label: "Repositories", icon: "Package" },
+      { href: "/app/integrations", label: "Integrations", icon: "Blocks" },
+    ],
+  },
+  { label: null, items: [{ href: "/app/settings", label: "Settings", icon: "Settings" }] },
 ];
 
 export function Sidebar({
-  workspaceName,
-  faviconEmoji,
-  slug,
+  workspace,
   user,
+  onNavigate,
 }: {
-  workspaceName: string;
-  faviconEmoji: string;
-  slug: string;
+  workspace: { name: string; slug: string; faviconEmoji: string };
   user: { name: string; email: string };
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <Link href="/" className="flex items-center gap-2.5 px-4 py-4" title="Relay home">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-zinc-200 bg-white">
+      <Link
+        href="/"
+        onClick={onNavigate}
+        className="flex items-center gap-2.5 px-4 py-4"
+        title="Relay home"
+      >
         <LogoMark size={30} />
         <div className="leading-tight">
           <div className="text-sm font-semibold text-zinc-900">Relay</div>
@@ -40,44 +56,55 @@ export function Sidebar({
         </div>
       </Link>
 
-      <nav className="flex flex-col gap-0.5 px-2.5 py-2">
-        {NAV.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "bg-[var(--brand-soft)] text-[var(--brand)]"
-                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
-              )}
-            >
-              <Icon
-                name={item.icon}
-                size={17}
-                className={active ? "text-[var(--brand)]" : "text-zinc-400 group-hover:text-zinc-600"}
-              />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2">
+        {NAV.map((group, gi) => (
+          <div key={gi} className="space-y-0.5">
+            {group.label && (
+              <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                {group.label}
+              </p>
+            )}
+            {group.items.map((item) => {
+              const active = item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-[var(--brand-soft)] text-[var(--brand)]"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
+                  )}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={17}
+                    className={active ? "text-[var(--brand)]" : "text-zinc-400 group-hover:text-zinc-600"}
+                  />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      <div className="mt-auto space-y-2 p-3">
+      <div className="space-y-2 border-t border-zinc-100 p-3">
         <Link
-          href={`/c/${slug}`}
+          href={`/c/${workspace.slug}`}
           target="_blank"
+          onClick={onNavigate}
           className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-xs text-zinc-600 transition hover:border-zinc-300 hover:bg-white"
         >
-          <span className="flex items-center gap-2">
-            <span className="text-base leading-none">{faviconEmoji}</span>
-            <span className="font-medium text-zinc-700">{workspaceName}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="text-base leading-none">{workspace.faviconEmoji}</span>
+            <span className="truncate font-medium text-zinc-700">{workspace.name}</span>
           </span>
-          <Icon name="ExternalLink" size={13} className="text-zinc-400" />
+          <Icon name="ExternalLink" size={13} className="shrink-0 text-zinc-400" />
         </Link>
 
         <UserMenu user={user} />

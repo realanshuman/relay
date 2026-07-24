@@ -127,6 +127,18 @@ body {
     transform: translateX(100%);
   }
 }
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.22s ease-out;
+}
 .skeleton {
   @apply relative overflow-hidden bg-zinc-100;
 }
