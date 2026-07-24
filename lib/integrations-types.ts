@@ -17,7 +17,7 @@ export type GithubRepoOption = {
 
 export type LoadReposError =
   | "not_signed_in"
-  | "not_configured"
-  | "not_connected"
-  | "token_expired"
+  | "no_app"
+  | "not_installed"
+  | "token_failed"
   | "fetch_failed";

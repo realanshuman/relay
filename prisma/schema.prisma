@@ -21,6 +21,9 @@ model Workspace {
   accentColor  String  @default("#8b5cf6")
   faviconEmoji String  @default("🚀")
   aiCredits    Int     @default(500)
+  // GitHub App installation for this workspace (set after the user installs Relay on their repos).
+  githubInstallationId Int?
+  githubAccountLogin   String?
   createdAt    DateTime @default(now())
 
   repositories Repository[]
@@ -188,4 +191,18 @@ model Subscriber {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, email])
+}
+
+// The single GitHub App registered for this Relay instance (created once via the
+// manifest flow). Its private key / secrets are server-only and never sent to the client.
+model GithubApp {
+  id            String   @id @default(cuid())
+  appId         Int      @unique
+  slug          String
+  name          String
+  clientId      String
+  clientSecret  String
+  webhookSecret String?
+  privateKey    String // PEM — sensitive
+  createdAt     DateTime @default(now())
 }

@@ -1,40 +1,53 @@
-import { getCurrentUser } from "@/lib/session";
-import { githubConfigured, getGithubConnection } from "@/lib/github";
-import { getBaseUrl } from "@/lib/base-url";
+import { getCurrentUser, getCurrentWorkspace } from "@/lib/session";
+import { getGithubApp } from "@/lib/github-app";
 import { PageHeader } from "@/components/ui";
 import { IntegrationsView } from "@/components/integrations-view";
 
 export const metadata = { title: "Integrations" };
 export const dynamic = "force-dynamic";
 
+function errorText(code: string): string {
+  switch (code) {
+    case "state":
+      return "That GitHub link expired or didn't match. Please start again.";
+    case "setup":
+      return "Couldn't finish creating the GitHub app. Please try again.";
+    case "install":
+      return "Couldn't complete the installation. Please try again.";
+    default:
+      return "Something went wrong connecting GitHub. Please try again.";
+  }
+}
+
 export default async function IntegrationsPage({
   searchParams,
 }: {
-  searchParams: { error?: string; connected?: string };
+  searchParams: { installed?: string; setup?: string; error?: string };
 }) {
   const user = await getCurrentUser();
-  const configured = githubConfigured();
-  const connection =
-    user && configured ? await getGithubConnection(user.id) : { connected: false, login: null };
+  const app = user ? await getGithubApp() : null;
+  const ws = user ? await getCurrentWorkspace() : null;
 
-  const host = (process.env.BETTER_AUTH_URL || getBaseUrl()).replace(/\/$/, "");
-  const callbackUrl = `${host}/api/auth/callback/github`;
+  const notice = searchParams?.error
+    ? { tone: "error" as const, text: errorText(searchParams.error) }
+    : searchParams?.installed
+      ? { tone: "success" as const, text: "GitHub connected. Choose the repositories to import below." }
+      : null;
 
   return (
     <div>
       <PageHeader
         title="Integrations"
-        subtitle="Connect the tools Relay works with. Start with GitHub to import repositories in one click — no more typing owner/repo by hand."
+        subtitle="Connect the tools Relay works with. GitHub is a one-click setup — no tokens, no config files."
         icon="Blocks"
       />
       <IntegrationsView
         github={{
-          configured,
-          connected: connection.connected,
-          login: connection.login,
-          callbackUrl,
+          hasApp: Boolean(app),
+          installed: Boolean(ws?.githubInstallationId),
+          accountLogin: ws?.githubAccountLogin ?? null,
         }}
-        connectError={searchParams?.error === "github" || searchParams?.error === "1"}
+        notice={notice}
       />
     </div>
   );

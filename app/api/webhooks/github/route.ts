@@ -7,17 +7,28 @@ import type { ChannelType } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-function verifySignature(body: string, signature: string | null): boolean {
-  const secret = process.env.GITHUB_WEBHOOK_SECRET;
-  if (!secret) return true; // verification disabled when no secret configured
-  if (!signature) return false;
-  const expected =
-    "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");
+function matchesSecret(body: string, signature: string, secret: string): boolean {
+  const expected = "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");
   try {
     return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
   } catch {
     return false;
   }
+}
+
+async function verifySignature(body: string, signature: string | null): Promise<boolean> {
+  const secrets: string[] = [];
+  if (process.env.GITHUB_WEBHOOK_SECRET) secrets.push(process.env.GITHUB_WEBHOOK_SECRET);
+  // The GitHub App (created via the manifest flow) has its own webhook secret in the DB.
+  try {
+    const app = await prisma.githubApp.findFirst({ select: { webhookSecret: true } });
+    if (app?.webhookSecret) secrets.push(app.webhookSecret);
+  } catch {
+    /* DB unavailable — fall through to env-only check */
+  }
+  if (secrets.length === 0) return true; // no secret configured → allow (dev/manual testing)
+  if (!signature) return false;
+  return secrets.some((secret) => matchesSecret(body, signature, secret));
 }
 
 /**
@@ -29,7 +40,7 @@ function verifySignature(body: string, signature: string | null): boolean {
 export async function POST(req: Request) {
   const raw = await req.text();
   const signature = req.headers.get("x-hub-signature-256");
-  if (!verifySignature(raw, signature)) {
+  if (!(await verifySignature(raw, signature))) {
     return Response.json({ error: "Invalid signature" }, { status: 401 });
   }
 

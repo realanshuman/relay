@@ -1,35 +1,41 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
 import { Icon, Badge } from "./ui";
 import { SubmitButton } from "./submit-button";
 import { addRepository } from "@/lib/actions";
-import { loadGithubRepos, importGithubRepos, disconnectGithub } from "@/lib/integrations";
+import {
+  beginGithubSetup,
+  beginGithubInstall,
+  loadInstallationRepos,
+  importGithubRepos,
+  disconnectGithubInstall,
+} from "@/lib/integrations";
 import type { GithubRepoOption, LoadReposError } from "@/lib/integrations-types";
 import { cn, timeAgo } from "@/lib/utils";
 
 type GithubProps = {
-  configured: boolean;
-  connected: boolean;
-  login: string | null;
-  callbackUrl: string;
+  hasApp: boolean;
+  installed: boolean;
+  accountLogin: string | null;
 };
 
-export function IntegrationsView({
-  github,
-  connectError,
-}: {
-  github: GithubProps;
-  connectError?: boolean;
-}) {
+type Notice = { tone: "success" | "error"; text: string } | null;
+
+export function IntegrationsView({ github, notice }: { github: GithubProps; notice: Notice }) {
   return (
     <div className="space-y-8">
-      {connectError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          GitHub couldn&apos;t be connected. Please try again — if it keeps failing, re-check that your
-          OAuth app&apos;s callback URL matches the one shown below.
+      {notice && (
+        <div
+          className={cn(
+            "rounded-lg border px-4 py-3 text-sm",
+            notice.tone === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-red-200 bg-red-50 text-red-700",
+          )}
+        >
+          {notice.text}
         </div>
       )}
       <GithubCard github={github} />
@@ -49,33 +55,33 @@ function GithubCard({ github }: { github: GithubProps }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-zinc-900">GitHub</span>
-              {github.connected ? (
+              {github.installed ? (
                 <Badge tone="green" dot>
                   Connected
                 </Badge>
-              ) : github.configured ? (
-                <Badge tone="zinc">Not connected</Badge>
+              ) : github.hasApp ? (
+                <Badge tone="blue">Ready to install</Badge>
               ) : (
-                <Badge tone="amber">Setup needed</Badge>
+                <Badge tone="amber">Set up in one click</Badge>
               )}
             </div>
             <p className="text-sm text-zinc-500">
-              {github.connected && github.login
-                ? `Connected as @${github.login}`
-                : "Import repositories and detect releases automatically."}
+              {github.installed && github.accountLogin
+                ? `Installed on @${github.accountLogin}`
+                : "Import repositories and auto-detect releases on merge."}
             </p>
           </div>
         </div>
-        {github.connected && <DisconnectButton />}
+        {github.installed && <DisconnectButton />}
       </div>
 
       <div className="p-4">
-        {!github.configured ? (
-          <NotConfigured callbackUrl={github.callbackUrl} />
-        ) : !github.connected ? (
-          <ConnectPrompt />
-        ) : (
+        {github.installed ? (
           <RepoPicker />
+        ) : github.hasApp ? (
+          <InstallPrompt />
+        ) : (
+          <SetupPrompt />
         )}
         <ManualAdd />
       </div>
@@ -83,45 +89,77 @@ function GithubCard({ github }: { github: GithubProps }) {
   );
 }
 
-function ConnectPrompt() {
+function SetupPrompt() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function connect() {
+  async function setup() {
     setPending(true);
     setError(null);
-    try {
-      const { data, error } = await authClient.linkSocial({
-        provider: "github",
-        scopes: ["repo", "read:org"],
-        callbackURL: "/app/integrations?connected=1",
-        errorCallbackURL: "/app/integrations?error=github",
-      });
-      if (error) {
-        setError(error.message || "Couldn't start the GitHub connect flow.");
-        setPending(false);
-        return;
-      }
-      if (data && "url" in data && data.url) {
-        window.location.href = data.url as string;
-        return;
-      }
-      // Some client builds auto-redirect; leave the button in its pending state.
-    } catch {
-      setError("Couldn't start the GitHub connect flow. Please try again.");
+    const res = await beginGithubSetup();
+    if (!res.ok) {
+      setError(res.error);
       setPending(false);
+      return;
     }
+    // Submit the manifest to GitHub as a form POST so it opens the pre-filled
+    // "Create GitHub App" screen. GitHub posts the keys back to our callback.
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = res.url;
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "manifest";
+    input.value = res.manifest;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
   }
 
   return (
     <div className="flex flex-col items-start gap-3">
       <p className="text-sm text-zinc-600">
-        Authorize Relay to see your repositories. You&apos;ll choose exactly which ones to import —
-        nothing is added automatically.
+        Click below and GitHub shows you a pre-filled <b>Create app</b> screen. Approve it, and
+        GitHub sends the keys straight back to Relay — nothing to copy, no environment variables.
+        You&apos;ll then pick your repositories on GitHub&apos;s own screen.
       </p>
-      <button onClick={connect} disabled={pending} className="btn-brand">
+      <button onClick={setup} disabled={pending} className="btn-brand">
         <Icon name={pending ? "Loader2" : "Github"} size={16} className={pending ? "animate-spin" : ""} />
-        {pending ? "Redirecting to GitHub…" : "Connect GitHub"}
+        {pending ? "Opening GitHub…" : "Set up GitHub"}
+      </button>
+      <p className="text-xs text-zinc-400">
+        Creates a private GitHub App in your account. One-time — future sign-ins just click Connect.
+      </p>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function InstallPrompt() {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function install() {
+    setPending(true);
+    setError(null);
+    const res = await beginGithubInstall();
+    if (!res.ok) {
+      setError(res.error);
+      setPending(false);
+      return;
+    }
+    window.location.href = res.url;
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-sm text-zinc-600">
+        Your Relay GitHub App is ready. Install it and choose which repositories Relay can see —
+        you pick them right on GitHub&apos;s screen.
+      </p>
+      <button onClick={install} disabled={pending} className="btn-brand">
+        <Icon name={pending ? "Loader2" : "Github"} size={16} className={pending ? "animate-spin" : ""} />
+        {pending ? "Opening GitHub…" : "Install & choose repositories"}
       </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
@@ -130,37 +168,32 @@ function ConnectPrompt() {
 
 function DisconnectButton() {
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        onClick={() => {
-          if (
-            !confirm(
-              "Disconnect GitHub? Imported repositories stay, but Relay loses API access until you reconnect.",
-            )
+    <button
+      onClick={() => {
+        if (
+          !confirm(
+            "Disconnect GitHub? Imported repositories stay, but Relay stops seeing new commits until you reconnect.",
           )
-            return;
-          startTransition(async () => {
-            const res = await disconnectGithub();
-            if (!res.ok) setError(res.error || "Couldn't disconnect.");
-          });
-        }}
-        disabled={pending}
-        className="btn-ghost text-zinc-500 hover:text-red-600"
-      >
-        <Icon name={pending ? "Loader2" : "Unplug"} size={15} className={pending ? "animate-spin" : ""} />
-        Disconnect
-      </button>
-      {error && <p className="max-w-[16rem] text-right text-xs text-red-600">{error}</p>}
-    </div>
+        )
+          return;
+        startTransition(async () => {
+          await disconnectGithubInstall();
+        });
+      }}
+      disabled={pending}
+      className="btn-ghost text-zinc-500 hover:text-red-600"
+    >
+      <Icon name={pending ? "Loader2" : "Unplug"} size={15} className={pending ? "animate-spin" : ""} />
+      Disconnect
+    </button>
   );
 }
 
 function RepoPicker() {
   const [repos, setRepos] = useState<GithubRepoOption[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [importing, startImport] = useTransition();
@@ -170,7 +203,7 @@ function RepoPicker() {
     setLoading(true);
     setLoadError(null);
     setImportedCount(null);
-    const res = await loadGithubRepos();
+    const res = await loadInstallationRepos();
     setLoading(false);
     if (!res.ok) {
       setLoadError(loadErrorMessage(res.error));
@@ -178,6 +211,11 @@ function RepoPicker() {
     }
     setRepos(res.repos);
   }
+
+  // Auto-load once — the user just installed, so show their repos immediately.
+  useEffect(() => {
+    load();
+  }, []);
 
   const q = query.trim().toLowerCase();
   const filtered = (repos ?? []).filter((r) => r.fullName.toLowerCase().includes(q));
@@ -196,19 +234,6 @@ function RepoPicker() {
       setSelected({});
       await load();
     });
-  }
-
-  if (!repos && !loading && !loadError) {
-    return (
-      <div className="flex flex-col items-start gap-3">
-        <p className="text-sm text-zinc-600">
-          Load your GitHub repositories, then pick the ones Relay should watch for releases.
-        </p>
-        <button onClick={load} className="btn-brand">
-          <Icon name="RefreshCw" size={15} /> Load my repositories
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -254,7 +279,9 @@ function RepoPicker() {
           <div className="max-h-[22rem] divide-y divide-zinc-100 overflow-y-auto rounded-lg border border-zinc-200">
             {filtered.length === 0 && (
               <div className="px-3 py-8 text-center text-sm text-zinc-500">
-                {query ? `No repositories match “${query}”.` : "No repositories found."}
+                {query
+                  ? `No repositories match “${query}”.`
+                  : "No repositories in this installation yet."}
               </div>
             )}
             {filtered.map((r) => {
@@ -297,7 +324,14 @@ function RepoPicker() {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-500">{selectedList.length} selected</span>
+            <a
+              href="https://github.com/settings/installations"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-medium text-zinc-500 underline-offset-2 hover:text-zinc-700 hover:underline"
+            >
+              Add or remove repos on GitHub ↗
+            </a>
             <button onClick={doImport} disabled={!selectedList.length || importing} className="btn-brand">
               <Icon
                 name={importing ? "Loader2" : "Plus"}
@@ -317,54 +351,13 @@ function RepoPicker() {
   );
 }
 
-function NotConfigured({ callbackUrl }: { callbackUrl: string }) {
-  return (
-    <div className="space-y-3 text-sm text-zinc-600">
-      <p>
-        To enable one-click connect, register a GitHub OAuth app and add its keys to Relay. It takes
-        about two minutes:
-      </p>
-      <ol className="list-decimal space-y-2 pl-5">
-        <li>
-          Open{" "}
-          <a
-            className="font-medium text-zinc-800 underline underline-offset-2"
-            href="https://github.com/settings/developers"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub → Settings → Developer settings → OAuth Apps
-          </a>{" "}
-          and click <b>New OAuth App</b>.
-        </li>
-        <li>
-          Set the <b>Authorization callback URL</b> to:
-          <CopyRow value={callbackUrl} />
-        </li>
-        <li>
-          Copy the <b>Client ID</b> and generate a <b>Client secret</b>.
-        </li>
-        <li>
-          In Vercel → your project → <b>Settings → Environment Variables</b>, add{" "}
-          <code className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs">GITHUB_CLIENT_ID</code> and{" "}
-          <code className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs">GITHUB_CLIENT_SECRET</code>,
-          then <b>Redeploy</b>.
-        </li>
-      </ol>
-      <p className="text-zinc-500">
-        The <b>Connect GitHub</b> button appears here automatically once those are set.
-      </p>
-    </div>
-  );
-}
-
 function ManualAdd() {
   return (
     <details className="mt-4 border-t border-zinc-100 pt-3">
       <summary className="cursor-pointer select-none text-xs font-medium text-zinc-500 hover:text-zinc-700">
         Add a repository manually instead
       </summary>
-      <form action={addRepository} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+      <form action={addRepository} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1">
           <label className="label">Repository</label>
           <div className="relative">
@@ -383,28 +376,6 @@ function ManualAdd() {
         <SubmitButton icon="Plus">Add</SubmitButton>
       </form>
     </details>
-  );
-}
-
-function CopyRow({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="mt-1 flex items-center gap-2">
-      <code className="min-w-0 flex-1 truncate rounded-md bg-zinc-100 px-2 py-1 font-mono text-xs text-zinc-700">
-        {value}
-      </code>
-      <button
-        type="button"
-        onClick={() => {
-          navigator.clipboard?.writeText(value);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        }}
-        className="btn-ghost shrink-0 px-2 py-1 text-xs"
-      >
-        <Icon name={copied ? "Check" : "Copy"} size={13} /> {copied ? "Copied" : "Copy"}
-      </button>
-    </div>
   );
 }
 
@@ -442,12 +413,12 @@ function ComingSoon() {
 
 function loadErrorMessage(error: LoadReposError): string {
   switch (error) {
-    case "not_configured":
-      return "GitHub isn't set up yet — add your OAuth app keys first.";
-    case "not_connected":
-      return "Connect GitHub first, then load your repositories.";
-    case "token_expired":
-      return "Your GitHub authorization expired. Click Disconnect, then Connect GitHub again.";
+    case "no_app":
+      return "Set up the GitHub app first.";
+    case "not_installed":
+      return "Install the GitHub app first, then load your repositories.";
+    case "token_failed":
+      return "Couldn't authenticate with GitHub. Try disconnecting and reconnecting.";
     case "not_signed_in":
       return "You're signed out — please sign in again.";
     default:

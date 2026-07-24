@@ -54,9 +54,9 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   socialProviders.github = {
     clientId: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    // `repo` lets Relay list a user's repositories (and later create GitHub Releases);
-    // `read:user`/`user:email` cover profile + email at sign-in.
-    scope: ["read:user", "user:email", "repo"],
+    // Sign-in only needs identity. Repository access comes from the GitHub App
+    // installation (see lib/github-app.ts), not from the login token.
+    scope: ["read:user", "user:email"],
   };
 }
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
