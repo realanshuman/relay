@@ -27,7 +27,7 @@ With these two, users can sign up (email/password), connect repos manually, gene
 | # | Service | Unlocks | Env var(s) | Free option? |
 | --- | --- | --- | --- | --- |
 | 2 | **OpenRouter** | Live LLM-written notes/posts instead of the deterministic generator | `OPENROUTER_API_KEY` | **Yes** — free models are the default (see below) |
-| 3 | **GitHub** (one-click) | Connect repos + automatic release detection on merge | Nothing to pre-configure. On **Integrations**, click **Set up GitHub** — Relay creates a private GitHub App via the manifest flow (keys are stored automatically), you install it on your repos, and its webhook is wired to `/api/webhooks/github` for you | Free |
+| 3 | **GitHub** (one-click) | Connect repos + automatic release detection on merge | **Operator, once:** on **Integrations**, click **Set up GitHub** to register the official Relay GitHub App (keys stored automatically; webhook wired to `/api/webhooks/github`). **Every user after that:** just clicks **Connect GitHub** and picks repos on GitHub's screen — installations are per-account, so users never conflict. Optional production hardening: provide the app via env vars `GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY` (PEM or base64), `GITHUB_APP_WEBHOOK_SECRET` — env wins over the stored row and survives DB resets | Free |
 | 4 | **Resend** (email) | Real password-reset emails + subscriber notifications (without it, reset works in demo mode by showing the link) | `RESEND_API_KEY`, `EMAIL_FROM` | Free tier (3k emails/mo) |
 | 5 | **Social login** | Google / GitHub sign-in buttons (appear automatically when configured) | Set `GITHUB_CLIENT_ID`/`SECRET` and/or `GOOGLE_CLIENT_ID`/`SECRET`. Callback: `<BETTER_AUTH_URL>/api/auth/callback/github` | Free |
 | 6 | **Custom domain** | `updates.tryrelay.run` for the changelog, and correct reset/webhook links | Vercel domain settings; optionally `NEXT_PUBLIC_APP_URL` | Domain cost only |
@@ -55,11 +55,12 @@ Notes:
 
 These are UI-complete or stubbed, and are the honest "not real yet" list:
 
-- ~~One-click GitHub repo connect~~ — **done.** The **Integrations** page creates a private
-  GitHub App from a manifest (one click → approve on GitHub → keys stored automatically), you
-  install it on the repos you choose, and its push/PR webhook is wired to
-  `/api/webhooks/github` so releases auto-draft on merge. No OAuth app registration, tokens, or
-  env vars required.
+- ~~One-click GitHub repo connect~~ — **done, multi-user.** One official Relay GitHub App per
+  instance (registered once by the operator via the manifest flow, or provided through
+  `GITHUB_APP_*` env vars). Every user connects by installing that app on their own account and
+  picking repositories on GitHub's screen; installations are isolated per GitHub account, and a
+  second setup can never replace the registered app. The app's push/PR webhook is wired to
+  `/api/webhooks/github` so releases auto-draft on merge.
 - **Auto-posting to social channels** — Relay generates ready-to-copy / API-ready content for
   Twitter/LinkedIn/Discord/Telegram; it does not post to them for you yet. The changelog and
   (with Resend) email are the fully-automated channels.

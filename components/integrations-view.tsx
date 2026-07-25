@@ -60,9 +60,9 @@ function GithubCard({ github }: { github: GithubProps }) {
                   Connected
                 </Badge>
               ) : github.hasApp ? (
-                <Badge tone="blue">Ready to install</Badge>
+                <Badge tone="blue">Not connected</Badge>
               ) : (
-                <Badge tone="amber">Set up in one click</Badge>
+                <Badge tone="amber">Needs one-time setup</Badge>
               )}
             </div>
             <p className="text-sm text-zinc-500">
@@ -118,18 +118,19 @@ function SetupPrompt() {
 
   return (
     <div className="flex flex-col items-start gap-3">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-xs text-zinc-500">
+        <span className="font-semibold text-zinc-700">One-time setup for this Relay instance.</span>{" "}
+        This registers the official Relay GitHub App. It happens once, ever: after this, every
+        user (including you) just clicks <b>Connect GitHub</b> and picks repositories.
+      </div>
       <p className="text-sm text-zinc-600">
-        Click below and GitHub shows you a pre-filled <b>Create app</b> screen. Approve it, and
-        GitHub sends the keys straight back to Relay — nothing to copy, no environment variables.
-        You&apos;ll then pick your repositories on GitHub&apos;s own screen.
+        GitHub shows you a pre-filled <b>Create app</b> screen. Approve it, and the keys flow
+        straight back to Relay. Nothing to copy, no environment variables.
       </p>
       <button onClick={setup} disabled={pending} className="btn-brand">
         <Icon name={pending ? "Loader2" : "Github"} size={16} className={pending ? "animate-spin" : ""} />
-        {pending ? "Opening GitHub…" : "Set up GitHub"}
+        {pending ? "Opening GitHub…" : "Set up GitHub (one time)"}
       </button>
-      <p className="text-xs text-zinc-400">
-        Creates a private GitHub App in your account. One-time — future sign-ins just click Connect.
-      </p>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
@@ -154,12 +155,13 @@ function InstallPrompt() {
   return (
     <div className="flex flex-col items-start gap-3">
       <p className="text-sm text-zinc-600">
-        Your Relay GitHub App is ready. Install it and choose which repositories Relay can see —
-        you pick them right on GitHub&apos;s screen.
+        Connect your GitHub account and choose which repositories Relay can see. You pick them
+        right on GitHub&apos;s screen and you&apos;re back here in seconds. Each account&apos;s
+        access stays separate.
       </p>
       <button onClick={install} disabled={pending} className="btn-brand">
         <Icon name={pending ? "Loader2" : "Github"} size={16} className={pending ? "animate-spin" : ""} />
-        {pending ? "Opening GitHub…" : "Install & choose repositories"}
+        {pending ? "Opening GitHub…" : "Connect GitHub"}
       </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

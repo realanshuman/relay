@@ -32,16 +32,6 @@ function appHost(): string {
   return (process.env.BETTER_AUTH_URL || getBaseUrl()).replace(/\/$/, "");
 }
 
-/** A GitHub-app name that's likely unique (global on GitHub); the user can still edit it. */
-function suggestedAppName(workspaceName: string): string {
-  const clean = workspaceName
-    .replace(/[^A-Za-z0-9 .-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 26);
-  return `${clean || "Relay"} Releases`;
-}
-
 /**
  * Step 1 (one-time): start creating the Relay GitHub App from a manifest. Returns the
  * GitHub URL to POST to and the manifest JSON; the client submits a form so GitHub shows
@@ -52,9 +42,13 @@ export async function beginGithubSetup(): Promise<
 > {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Please sign in again." };
-  const ws = await getCurrentWorkspace();
+  // One official app per instance. Once it exists, nobody can replace it from the
+  // UI (that would break every other user's installation) — users just install it.
+  if (await getGithubApp()) {
+    return { ok: false, error: "GitHub is already set up for Relay. Use Connect GitHub instead." };
+  }
   const state = newState();
-  const manifest = JSON.stringify(buildManifest(appHost(), suggestedAppName(ws.name)));
+  const manifest = JSON.stringify(buildManifest(appHost(), "Relay Releases"));
   const url = `https://github.com/settings/apps/new?state=${encodeURIComponent(state)}`;
   return { ok: true, url, manifest };
 }

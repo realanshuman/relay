@@ -14,6 +14,8 @@ function errorText(code: string): string {
       return "Couldn't finish creating the GitHub app. Please try again.";
     case "install":
       return "Couldn't complete the installation. Please try again.";
+    case "exists":
+      return "GitHub is already set up for this Relay. Click Connect GitHub to pick your repositories.";
     default:
       return "Something went wrong connecting GitHub. Please try again.";
   }
@@ -38,7 +40,7 @@ export default async function IntegrationsPage({
     <div>
       <PageHeader
         title="Integrations"
-        subtitle="Connect the tools Relay works with. GitHub is a one-click setup — no tokens, no config files."
+        subtitle="Connect the tools Relay works with. GitHub is one click: no tokens, no config files."
         icon="Blocks"
       />
       <IntegrationsView

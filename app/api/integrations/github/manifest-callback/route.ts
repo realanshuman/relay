@@ -26,10 +26,15 @@ export async function GET(req: NextRequest) {
     return back("error=state");
   }
 
+  // One official app per instance. A second setup must never replace the first —
+  // that would invalidate every existing user's installation.
+  const existing = await prisma.githubApp.findFirst({ select: { id: true } });
+  if (existing || process.env.GITHUB_APP_ID) {
+    return back("error=exists");
+  }
+
   try {
     const created = await exchangeManifestCode(code);
-    // One app per instance: replace any prior registration.
-    await prisma.githubApp.deleteMany({});
     const app = await prisma.githubApp.create({
       data: {
         appId: created.id,

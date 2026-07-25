@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
+import { getGithubApp } from "@/lib/github-app";
 import { createDraftRelease } from "@/lib/releases";
 import { generateRelease, publishRelease } from "@/lib/actions";
 import type { RawCommit } from "@/lib/commits";
@@ -19,9 +20,9 @@ function matchesSecret(body: string, signature: string, secret: string): boolean
 async function verifySignature(body: string, signature: string | null): Promise<boolean> {
   const secrets: string[] = [];
   if (process.env.GITHUB_WEBHOOK_SECRET) secrets.push(process.env.GITHUB_WEBHOOK_SECRET);
-  // The GitHub App (created via the manifest flow) has its own webhook secret in the DB.
+  // The official Relay GitHub App's webhook secret (env-provided or stored by setup).
   try {
-    const app = await prisma.githubApp.findFirst({ select: { webhookSecret: true } });
+    const app = await getGithubApp();
     if (app?.webhookSecret) secrets.push(app.webhookSecret);
   } catch {
     /* DB unavailable — fall through to env-only check */

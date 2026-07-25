@@ -38,9 +38,57 @@ export type InstallationRepo = {
   language: string | null;
 };
 
-/** The single registered GitHub App for this instance (or null before setup). */
-export async function getGithubApp() {
-  return prisma.githubApp.findFirst({ orderBy: { createdAt: "desc" } });
+export type GithubAppCreds = {
+  appId: number;
+  slug: string;
+  name: string;
+  privateKey: string;
+  webhookSecret: string | null;
+  /** "env" = credentials from environment variables; "db" = created via the manifest flow. */
+  source: "env" | "db";
+};
+
+/**
+ * The ONE official Relay GitHub App for this instance.
+ *
+ * This is deliberately singular: the operator registers it once, and every user
+ * simply installs it on their own repos (GitHub keeps installations per account,
+ * so users never conflict with each other and never create apps themselves).
+ *
+ * Resolution order:
+ *  1. Environment variables (production-grade: survives DB resets, supports key
+ *     rotation): GITHUB_APP_ID + GITHUB_APP_SLUG + GITHUB_APP_PRIVATE_KEY
+ *     (raw PEM with \n escapes, or base64-encoded PEM) and optionally
+ *     GITHUB_APP_WEBHOOK_SECRET.
+ *  2. The GithubApp row stored by the one-time manifest setup flow.
+ */
+export async function getGithubApp(): Promise<GithubAppCreds | null> {
+  const id = process.env.GITHUB_APP_ID;
+  const slug = process.env.GITHUB_APP_SLUG;
+  const rawKey = process.env.GITHUB_APP_PRIVATE_KEY;
+  if (id && slug && rawKey && Number.isFinite(Number(id))) {
+    const privateKey = rawKey.includes("BEGIN")
+      ? rawKey.replace(/\\n/g, "\n")
+      : Buffer.from(rawKey, "base64").toString("utf8");
+    return {
+      appId: Number(id),
+      slug,
+      name: process.env.GITHUB_APP_NAME || "Relay",
+      privateKey,
+      webhookSecret: process.env.GITHUB_APP_WEBHOOK_SECRET || null,
+      source: "env",
+    };
+  }
+  const row = await prisma.githubApp.findFirst({ orderBy: { createdAt: "desc" } });
+  if (!row) return null;
+  return {
+    appId: row.appId,
+    slug: row.slug,
+    name: row.name,
+    privateKey: row.privateKey,
+    webhookSecret: row.webhookSecret,
+    source: "db",
+  };
 }
 
 function base64url(input: Buffer | string): string {
