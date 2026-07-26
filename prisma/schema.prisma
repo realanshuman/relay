@@ -118,6 +118,8 @@ model Repository {
   latestCommit        String?
   latestCommitMessage String?
   latestCommitAt      DateTime?
+  // Last time Relay polled GitHub for new commits on the target branch.
+  lastSyncedAt        DateTime?
   workspaceId         String
   createdAt           DateTime @default(now())
 

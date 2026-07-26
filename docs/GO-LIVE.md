@@ -55,6 +55,13 @@ Notes:
 
 These are UI-complete or stubbed, and are the honest "not real yet" list:
 
+- ~~Automatic release detection~~ — **done.** Two paths, both landing on the same draft:
+  **webhooks** from the GitHub App (instant on push / merged PR, fanned out to every
+  workspace that imported the repo) and a **poller** that asks GitHub what landed since the
+  commit Relay last saw. The poller powers the **Check for updates** button and runs on a
+  schedule via `/api/cron/sync` (Vercel Cron every 15 minutes, see `vercel.json`). Set
+  `CRON_SECRET` in production to lock that endpoint down.
+
 - ~~One-click GitHub repo connect~~ — **done, multi-user.** One official Relay GitHub App per
   instance (registered once by the operator via the manifest flow, or provided through
   `GITHUB_APP_*` env vars). Every user connects by installing that app on their own account and

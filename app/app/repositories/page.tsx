@@ -29,6 +29,7 @@ export default async function RepositoriesPage() {
     latestCommit: r.latestCommit,
     latestCommitMessage: r.latestCommitMessage,
     latestCommitAt: r.latestCommitAt,
+    lastSyncedAt: r.lastSyncedAt,
     latestReleaseVersion: r.releases[0]?.version ?? null,
   }));
 
@@ -36,7 +37,7 @@ export default async function RepositoriesPage() {
     <div>
       <PageHeader
         title="Repositories"
-        subtitle="Connect GitHub repositories. Relay drafts a release whenever the target branch is updated."
+        subtitle="Relay watches these repositories and drafts a release whenever the target branch is updated."
         icon="Package"
       />
       <RepositoriesView repos={shaped} />

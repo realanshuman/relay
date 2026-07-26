@@ -58,77 +58,96 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing repository" }, { status: 400 });
   }
 
-  const repo = await prisma.repository.findFirst({
+  // The same repository can be imported by several workspaces; every one of them
+  // should get its own draft. (Previously only the first match was notified.)
+  const repos = await prisma.repository.findMany({
     where: { fullName, connected: true },
   });
-  if (!repo) {
+  if (repos.length === 0) {
     return Response.json({ skipped: `Repository ${fullName} not connected` }, { status: 202 });
   }
 
-  let commits: RawCommit[] = [];
-  let version: string | undefined;
-
-  if (event === "push") {
-    const ref: string = payload.ref ?? "";
-    if (ref !== `refs/heads/${repo.targetBranch}`) {
-      return Response.json({ skipped: `Ignoring ref ${ref}` }, { status: 202 });
+  /** Pull the commit list for this event, relative to one repo's target branch. */
+  function commitsFor(targetBranch: string): RawCommit[] | { skip: string } {
+    if (event === "push") {
+      const ref: string = payload.ref ?? "";
+      if (ref !== `refs/heads/${targetBranch}`) return { skip: `Ignoring ref ${ref}` };
+      return ((payload.commits ?? []) as any[])
+        .map((c) => ({
+          sha: String(c.id ?? "").slice(0, 7),
+          message: String(c.message ?? "").split("\n")[0],
+          author: String(c.author?.name ?? c.author?.username ?? "unknown"),
+        }))
+        .reverse(); // newest first
     }
-    commits = ((payload.commits ?? []) as any[])
-      .map((c) => ({
-        sha: String(c.id ?? "").slice(0, 7),
-        message: String(c.message ?? ""),
-        author: String(c.author?.name ?? c.author?.username ?? "unknown"),
-      }))
-      .reverse(); // newest first
-  } else if (event === "pull_request") {
-    if (!(payload.action === "closed" && payload.pull_request?.merged)) {
-      return Response.json({ skipped: "PR not merged" }, { status: 202 });
+    if (event === "pull_request") {
+      if (!(payload.action === "closed" && payload.pull_request?.merged)) {
+        return { skip: "PR not merged" };
+      }
+      const pr = payload.pull_request;
+      if (pr.base?.ref && pr.base.ref !== targetBranch) {
+        return { skip: `PR not into ${targetBranch}` };
+      }
+      return [
+        {
+          sha: String(pr.merge_commit_sha ?? pr.head?.sha ?? "").slice(0, 7),
+          message: String(pr.title ?? "Merged pull request"),
+          author: String(pr.user?.login ?? "unknown"),
+        },
+      ];
     }
-    const pr = payload.pull_request;
-    if (pr.base?.ref && pr.base.ref !== repo.targetBranch) {
-      return Response.json({ skipped: `PR not into ${repo.targetBranch}` }, { status: 202 });
-    }
-    commits = [
-      {
-        sha: String(pr.merge_commit_sha ?? pr.head?.sha ?? "").slice(0, 7),
-        message: String(pr.title ?? "Merged pull request"),
-        author: String(pr.user?.login ?? "unknown"),
-      },
-    ];
-  } else {
-    return Response.json({ skipped: `Unhandled event ${event}` }, { status: 202 });
+    return { skip: `Unhandled event ${event}` };
   }
 
-  if (commits.length === 0) {
-    return Response.json({ skipped: "No commits" }, { status: 202 });
-  }
+  const results: Array<Record<string, unknown>> = [];
 
-  const release = await createDraftRelease({ repositoryId: repo.id, version, commits });
-
-  // Auto Publish: run the full pipeline and publish to the website + prepared channels.
-  if (repo.autoPublish) {
-    try {
-      await generateRelease(release.id);
-      await publishRelease(release.id, [
-        "website",
-        "twitter",
-        "linkedin",
-        "email",
-      ] as ChannelType[]);
-    } catch (err) {
-      return Response.json(
-        { releaseId: release.id, autoPublish: "failed", detail: String(err) },
-        { status: 200 },
-      );
+  for (const repo of repos) {
+    const commits = commitsFor(repo.targetBranch);
+    if (!Array.isArray(commits)) {
+      results.push({ repositoryId: repo.id, skipped: commits.skip });
+      continue;
     }
-  }
+    if (commits.length === 0) {
+      results.push({ repositoryId: repo.id, skipped: "No commits" });
+      continue;
+    }
 
-  return Response.json(
-    {
+    const release = await createDraftRelease({ repositoryId: repo.id, commits });
+    await prisma.repository.update({
+      where: { id: repo.id },
+      data: { lastSyncedAt: new Date() },
+    });
+
+    let status = "draft";
+    if (repo.autoPublish) {
+      try {
+        await generateRelease(release.id);
+        await publishRelease(release.id, [
+          "website",
+          "twitter",
+          "linkedin",
+          "email",
+        ] as ChannelType[]);
+        status = "published";
+      } catch (err) {
+        results.push({
+          repositoryId: repo.id,
+          releaseId: release.id,
+          autoPublish: "failed",
+          detail: String(err),
+        });
+        continue;
+      }
+    }
+
+    results.push({
+      repositoryId: repo.id,
       releaseId: release.id,
       version: release.version,
-      status: repo.autoPublish ? "published" : "draft",
-    },
-    { status: 201 },
-  );
+      status,
+    });
+  }
+
+  const created = results.filter((r) => r.releaseId).length;
+  return Response.json({ received: repos.length, created, results }, { status: created ? 201 : 202 });
 }

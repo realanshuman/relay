@@ -248,6 +248,44 @@ export async function listInstallationRepos(installationToken: string): Promise<
   return out;
 }
 
+export type RepoCommit = { sha: string; message: string; author: string; date: string | null };
+
+/**
+ * Commits on a branch, newest first. When `sinceSha` is given, only the commits
+ * pushed after it are returned (that is the "what's new since the last release"
+ * set). Returns [] when the branch is unchanged.
+ */
+export async function listRepoCommits(
+  installationToken: string,
+  fullName: string,
+  branch: string,
+  sinceSha?: string | null,
+  limit = 50,
+): Promise<RepoCommit[]> {
+  const rows = await ghJson<
+    Array<{
+      sha: string;
+      commit: { message: string; author?: { name?: string; date?: string } };
+      author?: { login?: string };
+    }>
+  >(
+    `/repos/${fullName}/commits?sha=${encodeURIComponent(branch)}&per_page=${Math.min(limit, 100)}`,
+    installationToken,
+  );
+
+  const all = rows.map((r) => ({
+    sha: r.sha,
+    message: r.commit?.message ?? "",
+    author: r.author?.login || r.commit?.author?.name || "unknown",
+    date: r.commit?.author?.date ?? null,
+  }));
+
+  if (!sinceSha) return all;
+  // `sinceSha` is stored short (7 chars); match on prefix.
+  const idx = all.findIndex((c) => c.sha.startsWith(sinceSha) || sinceSha.startsWith(c.sha.slice(0, 7)));
+  return idx === -1 ? all : all.slice(0, idx);
+}
+
 /** Best-effort uninstall (revokes the installation on GitHub). */
 export async function deleteInstallation(
   app: { appId: number; privateKey: string },
