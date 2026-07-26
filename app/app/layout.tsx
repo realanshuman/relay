@@ -30,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       user={{ name: user.name, email: user.email }}
       repos={repos}
       aiLive={aiEnabled()}
+      githubConnected={Boolean(workspace.githubInstallationId)}
     >
       {children}
     </AppShell>

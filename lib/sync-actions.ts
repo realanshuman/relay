@@ -14,6 +14,8 @@ export type SyncSummary = {
   tone: "success" | "neutral" | "warning" | "error";
   /** Short, user-facing sentence describing what happened. */
   message: string;
+  /** The first release drafted, so the caller can navigate straight to it. */
+  releaseId?: string;
 };
 
 function summarize(results: Awaited<ReturnType<typeof syncWorkspace>>): SyncSummary {
@@ -49,6 +51,7 @@ function summarize(results: Awaited<ReturnType<typeof syncWorkspace>>): SyncSumm
     errors: errors.length,
     tone,
     message,
+    releaseId: created[0]?.releaseId,
   };
 }
 

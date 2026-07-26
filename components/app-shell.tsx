@@ -48,12 +48,14 @@ export function AppShell({
   user,
   repos,
   aiLive,
+  githubConnected,
   children,
 }: {
   workspace: Workspace;
   user: User;
   repos: Repo[];
   aiLive: boolean;
+  githubConnected: boolean;
   children: React.ReactNode;
 }) {
   const [drawer, setDrawer] = useState(false);
@@ -143,7 +145,7 @@ export function AppShell({
               <Icon name="Globe" size={15} />
               Changelog
             </Link>
-            <NewReleaseButton repos={repos} />
+            <NewReleaseButton repos={repos} githubConnected={githubConnected} />
           </div>
         </header>
 
