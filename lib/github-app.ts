@@ -44,6 +44,8 @@ export type GithubAppCreds = {
   name: string;
   privateKey: string;
   webhookSecret: string | null;
+  /** Who ran the one-time setup (null for env-provided or legacy registrations). */
+  registeredByUserId: string | null;
   /** "env" = credentials from environment variables; "db" = created via the manifest flow. */
   source: "env" | "db";
 };
@@ -76,6 +78,7 @@ export async function getGithubApp(): Promise<GithubAppCreds | null> {
       name: process.env.GITHUB_APP_NAME || "Relay",
       privateKey,
       webhookSecret: process.env.GITHUB_APP_WEBHOOK_SECRET || null,
+      registeredByUserId: null,
       source: "env",
     };
   }
@@ -87,8 +90,38 @@ export async function getGithubApp(): Promise<GithubAppCreds | null> {
     name: row.name,
     privateKey: row.privateKey,
     webhookSecret: row.webhookSecret,
+    registeredByUserId: row.registeredByUserId,
     source: "db",
   };
+}
+
+/**
+ * Is this user the instance operator (the person who runs this Relay)?
+ *
+ * Only the operator ever sees or manages the shared GitHub App registration.
+ * Regular users must never see it: it belongs to the instance, not to them.
+ *
+ * Resolution, in order:
+ *  1. RELAY_ADMIN_EMAILS (comma-separated) always wins, if set.
+ *  2. The user who ran the one-time setup.
+ *  3. Legacy/env registrations with no recorded operator: the very first account
+ *     created on this instance.
+ */
+export async function isInstanceOperator(user: { id: string; email: string }): Promise<boolean> {
+  const admins = (process.env.RELAY_ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (admins.length) return admins.includes(user.email.toLowerCase());
+
+  const app = await getGithubApp();
+  if (app?.registeredByUserId) return app.registeredByUserId === user.id;
+
+  const first = await prisma.user.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  return first?.id === user.id;
 }
 
 function base64url(input: Buffer | string): string {

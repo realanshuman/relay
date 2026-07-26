@@ -1,5 +1,5 @@
 import { getCurrentUser, getCurrentWorkspace } from "@/lib/session";
-import { getGithubApp } from "@/lib/github-app";
+import { getGithubApp, isInstanceOperator } from "@/lib/github-app";
 import { PageHeader } from "@/components/ui";
 import { IntegrationsView } from "@/components/integrations-view";
 
@@ -16,6 +16,8 @@ function errorText(code: string): string {
       return "Couldn't complete the installation. Please try again.";
     case "exists":
       return "GitHub is already set up for this Relay. Click Connect GitHub to pick your repositories.";
+    case "forbidden":
+      return "Only the Relay instance owner can set up the GitHub app.";
     default:
       return "Something went wrong connecting GitHub. Please try again.";
   }
@@ -29,6 +31,9 @@ export default async function IntegrationsPage({
   const user = await getCurrentUser();
   const app = user ? await getGithubApp() : null;
   const ws = user ? await getCurrentWorkspace() : null;
+  // The shared app registration is an instance-level detail. Regular users must never
+  // see it (it would expose the operator's app name); they only ever "Connect GitHub".
+  const isOperator = user ? await isInstanceOperator(user) : false;
 
   const notice = searchParams?.error
     ? { tone: "error" as const, text: errorText(searchParams.error) }
@@ -46,7 +51,8 @@ export default async function IntegrationsPage({
       <IntegrationsView
         github={{
           hasApp: Boolean(app),
-          appName: app?.name ?? null,
+          isOperator,
+          appName: isOperator ? (app?.name ?? null) : null,
           managedByEnv: app?.source === "env",
           installed: Boolean(ws?.githubInstallationId),
           accountLogin: ws?.githubAccountLogin ?? null,

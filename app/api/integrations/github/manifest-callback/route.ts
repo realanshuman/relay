@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
-import { exchangeManifestCode, GITHUB_STATE_COOKIE } from "@/lib/github-app";
+import { exchangeManifestCode, isInstanceOperator, GITHUB_STATE_COOKIE } from "@/lib/github-app";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +32,9 @@ export async function GET(req: NextRequest) {
   if (existing || process.env.GITHUB_APP_ID) {
     return back("error=exists");
   }
+  if (!(await isInstanceOperator(user))) {
+    return back("error=forbidden");
+  }
 
   try {
     const created = await exchangeManifestCode(code);
@@ -44,6 +47,7 @@ export async function GET(req: NextRequest) {
         clientSecret: created.client_secret,
         webhookSecret: created.webhook_secret ?? null,
         privateKey: created.pem,
+        registeredByUserId: user.id,
       },
     });
 

@@ -204,5 +204,8 @@ model GithubApp {
   clientSecret  String
   webhookSecret String?
   privateKey    String // PEM — sensitive
+  // Who ran the one-time setup. Only this operator sees and manages the registration;
+  // regular users just install the app. Null on rows created before this was tracked.
+  registeredByUserId String?
   createdAt     DateTime @default(now())
 }

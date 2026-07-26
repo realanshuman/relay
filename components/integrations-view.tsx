@@ -18,6 +18,8 @@ import { cn, timeAgo } from "@/lib/utils";
 
 type GithubProps = {
   hasApp: boolean;
+  /** True only for the person who runs this Relay instance. */
+  isOperator: boolean;
   appName: string | null;
   managedByEnv: boolean;
   installed: boolean;
@@ -64,8 +66,10 @@ function GithubCard({ github }: { github: GithubProps }) {
                 </Badge>
               ) : github.hasApp ? (
                 <Badge tone="blue">Not connected</Badge>
-              ) : (
+              ) : github.isOperator ? (
                 <Badge tone="amber">Needs one-time setup</Badge>
+              ) : (
+                <Badge tone="zinc">Unavailable</Badge>
               )}
             </div>
             <p className="text-sm text-zinc-500">
@@ -83,10 +87,12 @@ function GithubCard({ github }: { github: GithubProps }) {
           <RepoPicker />
         ) : github.hasApp ? (
           <InstallPrompt />
-        ) : (
+        ) : github.isOperator ? (
           <SetupPrompt />
+        ) : (
+          <NotReadyYet />
         )}
-        {github.hasApp && (
+        {github.hasApp && github.isOperator && (
           <RegisteredApp name={github.appName} managedByEnv={github.managedByEnv} />
         )}
         <ManualAdd />
@@ -174,9 +180,24 @@ function InstallPrompt() {
   );
 }
 
+/** Non-operators before GitHub has been set up for the instance. */
+function NotReadyYet() {
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-sm text-zinc-600">
+        GitHub isn&apos;t available on this Relay yet. Once the workspace owner enables it,
+        you&apos;ll be able to connect your account and pick repositories here.
+      </p>
+      <p className="text-xs text-zinc-400">
+        In the meantime you can add a repository manually below.
+      </p>
+    </div>
+  );
+}
+
 /**
- * Shown once the instance's GitHub App is registered. It explains why the one-time
- * setup card is gone, and offers a guarded way to start over.
+ * Operator-only. Shown once the instance's GitHub App is registered: explains why the
+ * one-time setup card is gone, and offers a guarded way to start over.
  */
 function RegisteredApp({ name, managedByEnv }: { name: string | null; managedByEnv: boolean }) {
   const [pending, startTransition] = useTransition();

@@ -10,6 +10,7 @@ import type { GithubRepoOption, LoadReposError } from "./integrations-types";
 import {
   GITHUB_STATE_COOKIE,
   getGithubApp,
+  isInstanceOperator,
   buildManifest,
   getInstallationToken,
   listInstallationRepos,
@@ -47,6 +48,9 @@ export async function beginGithubSetup(): Promise<
   if (await getGithubApp()) {
     return { ok: false, error: "GitHub is already set up for Relay. Use Connect GitHub instead." };
   }
+  if (!(await isInstanceOperator(user))) {
+    return { ok: false, error: "Only the Relay instance owner can set up the GitHub app." };
+  }
   const state = newState();
   const manifest = JSON.stringify(buildManifest(appHost(), "Relay Releases"));
   const url = `https://github.com/settings/apps/new?state=${encodeURIComponent(state)}`;
@@ -79,6 +83,11 @@ export async function resetGithubSetup(): Promise<{ ok: boolean; error?: string 
 
   const app = await getGithubApp();
   if (!app) return { ok: true };
+
+  // The shared registration belongs to the instance, not to any one user.
+  if (!(await isInstanceOperator(user))) {
+    return { ok: false, error: "Only the Relay instance owner can change this." };
+  }
 
   if (app.source === "env") {
     return {
