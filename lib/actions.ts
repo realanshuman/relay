@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "./db";
-import { getCurrentWorkspace } from "./session";
+import { getCurrentUser, getCurrentWorkspace } from "./session";
 import { refineAsset } from "./ai";
 import { runGenerate, runPublish } from "./release-engine";
 import { createDraftRelease } from "./releases";
@@ -13,6 +13,11 @@ import { AssetType, ChannelType, RefineAction } from "./constants";
 
 function revalidateApp() {
   revalidatePath("/", "layout");
+}
+
+/** Conservative email check for values that arrive from a form. */
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 /**
@@ -29,6 +34,24 @@ async function assertOwnedRelease(releaseId: string) {
   });
   if (!release) throw new Error("Release not found");
   return release;
+}
+
+/**
+ * Team management (inviting, removing, changing roles) is restricted to owners and
+ * admins. Without this any member could promote an accomplice or remove the owner.
+ */
+async function requireWorkspaceManager() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not authenticated");
+  const ws = await getCurrentWorkspace();
+  const membership = await prisma.membership.findUnique({
+    where: { userId_workspaceId: { userId: user.id, workspaceId: ws.id } },
+    select: { role: true },
+  });
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    throw new Error("You don't have permission to manage this workspace's team.");
+  }
+  return { user, ws, role: membership.role };
 }
 
 /** Same idea for repositories. */
@@ -199,13 +222,34 @@ export async function updateBranding(formData: FormData) {
   revalidateApp();
 }
 
+/** Slugs that would collide with Relay's own routes or look official. */
+const RESERVED_SLUGS = new Set([
+  "app", "api", "admin", "login", "signup", "logout", "settings", "dashboard",
+  "about", "contact", "terms", "privacy", "relay", "www", "new", "c", "help",
+  "support", "status", "blog", "docs",
+]);
+
 export async function updateWorkspaceSlug(formData: FormData) {
   const ws = await getCurrentWorkspace();
   const slug = String(formData.get("slug") || "")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-");
-  if (!slug) return;
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  // Reject rather than crash: the column is unique, so an unchecked collision would
+  // surface as a raw database error page.
+  if (slug.length < 2 || slug.length > 40) return;
+  if (RESERVED_SLUGS.has(slug)) return;
+  if (slug === ws.slug) return;
+
+  const taken = await prisma.workspace.findFirst({
+    where: { slug, NOT: { id: ws.id } },
+    select: { id: true },
+  });
+  if (taken) return;
+
   await prisma.workspace.update({ where: { id: ws.id }, data: { slug } });
   revalidateApp();
 }
@@ -213,15 +257,18 @@ export async function updateWorkspaceSlug(formData: FormData) {
 // --- Team -----------------------------------------------------------------
 
 export async function inviteMember(formData: FormData) {
-  const ws = await getCurrentWorkspace();
+  const { ws } = await requireWorkspaceManager();
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const name = String(formData.get("name") || email.split("@")[0]).trim();
-  const role = String(formData.get("role") || "member");
-  if (!email) return;
+  // Never trust the submitted role: "owner" is not grantable through this form,
+  // otherwise any admin could mint another owner.
+  const requested = String(formData.get("role") || "member");
+  const role = requested === "admin" ? "admin" : "member";
+  if (!isEmail(email)) return;
 
   const user = await prisma.user.upsert({
     where: { email },
-    create: { id: randomUUID(), email, name, emailVerified: false },
+    create: { id: randomUUID(), email, name: name || email, emailVerified: false },
     update: {},
   });
 
@@ -234,7 +281,22 @@ export async function inviteMember(formData: FormData) {
 }
 
 export async function removeMember(membershipId: string) {
-  await prisma.membership.delete({ where: { id: membershipId } });
+  const { ws } = await requireWorkspaceManager();
+  // Scope to this workspace: a membership id from another workspace must not resolve.
+  const membership = await prisma.membership.findFirst({
+    where: { id: membershipId, workspaceId: ws.id },
+    select: { id: true, role: true },
+  });
+  if (!membership) throw new Error("Member not found");
+
+  if (membership.role === "owner") {
+    const owners = await prisma.membership.count({
+      where: { workspaceId: ws.id, role: "owner" },
+    });
+    if (owners <= 1) throw new Error("You can't remove the last owner of a workspace.");
+  }
+
+  await prisma.membership.delete({ where: { id: membership.id } });
   revalidatePath("/app/settings");
 }
 
@@ -243,7 +305,9 @@ export async function removeMember(membershipId: string) {
 export async function subscribeToChangelog(formData: FormData) {
   const slug = String(formData.get("slug") || "");
   const email = String(formData.get("email") || "").trim().toLowerCase();
-  if (!email || !slug) return;
+  // This endpoint is public (it powers the changelog subscribe box), so validate
+  // the address rather than storing whatever was posted.
+  if (!slug || !isEmail(email) || email.length > 254) return;
 
   const ws = await prisma.workspace.findUnique({ where: { slug } });
   if (!ws) return;
