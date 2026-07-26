@@ -11,12 +11,15 @@ import {
   loadInstallationRepos,
   importGithubRepos,
   disconnectGithubInstall,
+  resetGithubSetup,
 } from "@/lib/integrations";
 import type { GithubRepoOption, LoadReposError } from "@/lib/integrations-types";
 import { cn, timeAgo } from "@/lib/utils";
 
 type GithubProps = {
   hasApp: boolean;
+  appName: string | null;
+  managedByEnv: boolean;
   installed: boolean;
   accountLogin: string | null;
 };
@@ -82,6 +85,9 @@ function GithubCard({ github }: { github: GithubProps }) {
           <InstallPrompt />
         ) : (
           <SetupPrompt />
+        )}
+        {github.hasApp && (
+          <RegisteredApp name={github.appName} managedByEnv={github.managedByEnv} />
         )}
         <ManualAdd />
       </div>
@@ -164,6 +170,47 @@ function InstallPrompt() {
         {pending ? "Opening GitHub…" : "Connect GitHub"}
       </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+/**
+ * Shown once the instance's GitHub App is registered. It explains why the one-time
+ * setup card is gone, and offers a guarded way to start over.
+ */
+function RegisteredApp({ name, managedByEnv }: { name: string | null; managedByEnv: boolean }) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
+      <p className="text-xs text-zinc-400">
+        One-time setup is done. Registered app:{" "}
+        <span className="font-medium text-zinc-600">{name || "Relay Releases"}</span>
+        {managedByEnv && " (from environment variables)"}
+      </p>
+      {!managedByEnv && (
+        <button
+          onClick={() => {
+            if (
+              !confirm(
+                "Re-register the GitHub app?\n\nThis clears the current registration so you can run the one-time setup again. Only do this if setup went wrong.",
+              )
+            )
+              return;
+            setError(null);
+            startTransition(async () => {
+              const res = await resetGithubSetup();
+              if (!res.ok) setError(res.error || "Couldn't reset.");
+            });
+          }}
+          disabled={pending}
+          className="text-xs font-medium text-zinc-400 underline-offset-2 transition hover:text-zinc-700 hover:underline"
+        >
+          {pending ? "Resetting…" : "Re-register app"}
+        </button>
+      )}
+      {error && <p className="w-full text-xs text-red-600">{error}</p>}
     </div>
   );
 }

@@ -46,6 +46,8 @@ export default async function IntegrationsPage({
       <IntegrationsView
         github={{
           hasApp: Boolean(app),
+          appName: app?.name ?? null,
+          managedByEnv: app?.source === "env",
           installed: Boolean(ws?.githubInstallationId),
           accountLogin: ws?.githubAccountLogin ?? null,
         }}

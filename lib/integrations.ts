@@ -66,6 +66,50 @@ export async function beginGithubInstall(): Promise<
   return { ok: true, url };
 }
 
+/**
+ * Clear the registered GitHub App so the one-time setup can run again.
+ *
+ * Guarded so this can't quietly break other people: refused when the credentials
+ * come from environment variables, and refused when any OTHER workspace still has
+ * the app installed (resetting would disconnect them).
+ */
+export async function resetGithubSetup(): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Please sign in again." };
+
+  const app = await getGithubApp();
+  if (!app) return { ok: true };
+
+  if (app.source === "env") {
+    return {
+      ok: false,
+      error:
+        "These credentials come from environment variables. Remove the GITHUB_APP_* variables to change them.",
+    };
+  }
+
+  const ws = await getCurrentWorkspace();
+  const otherInstalls = await prisma.workspace.count({
+    where: { githubInstallationId: { not: null }, id: { not: ws.id } },
+  });
+  if (otherInstalls > 0) {
+    return {
+      ok: false,
+      error: `Can't reset: ${otherInstalls} other workspace${
+        otherInstalls > 1 ? "s have" : " has"
+      } this app installed, and resetting would disconnect them.`,
+    };
+  }
+
+  await prisma.githubApp.deleteMany({});
+  await prisma.workspace.update({
+    where: { id: ws.id },
+    data: { githubInstallationId: null, githubAccountLogin: null },
+  });
+  revalidatePath("/app/integrations");
+  return { ok: true };
+}
+
 type LoadResult = { ok: true; repos: GithubRepoOption[] } | { ok: false; error: LoadReposError };
 
 /** Fetch the installation's repositories, flagged with what's already imported. */
