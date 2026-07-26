@@ -5,73 +5,49 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "./db";
 import { getCurrentWorkspace } from "./session";
-import { generateAssets, refineAsset } from "./ai";
+import { refineAsset } from "./ai";
+import { runGenerate, runPublish } from "./release-engine";
 import { createDraftRelease } from "./releases";
 import { sampleCommits } from "./sample-commits";
 import { AssetType, ChannelType, RefineAction } from "./constants";
-import type { RawCommit } from "./commits";
 
 function revalidateApp() {
   revalidatePath("/", "layout");
+}
+
+/**
+ * Every release action below is reachable from the browser with an arbitrary id,
+ * so each one must prove the release belongs to the caller's workspace first.
+ * Without this a signed-in user could read, edit, publish, or delete another
+ * workspace's release just by knowing its id.
+ */
+async function assertOwnedRelease(releaseId: string) {
+  const ws = await getCurrentWorkspace();
+  const release = await prisma.release.findFirst({
+    where: { id: releaseId, workspaceId: ws.id },
+    select: { id: true, workspaceId: true },
+  });
+  if (!release) throw new Error("Release not found");
+  return release;
+}
+
+/** Same idea for repositories. */
+async function assertOwnedRepository(repositoryId: string) {
+  const ws = await getCurrentWorkspace();
+  const repo = await prisma.repository.findFirst({
+    where: { id: repositoryId, workspaceId: ws.id },
+    select: { id: true },
+  });
+  if (!repo) throw new Error("Repository not found");
+  return repo;
 }
 
 // --- Releases -------------------------------------------------------------
 
 /** Run the full generation pipeline for a release and persist all assets. */
 export async function generateRelease(releaseId: string) {
-  const release = await prisma.release.findUniqueOrThrow({
-    where: { id: releaseId },
-    include: { commits: true, repository: true, workspace: true },
-  });
-
-  await prisma.release.update({ where: { id: releaseId }, data: { status: "generating" } });
-
-  const commits: RawCommit[] = release.commits.map((c) => ({
-    sha: c.sha,
-    message: c.message,
-    author: c.author,
-  }));
-
-  const assets = await generateAssets({
-    version: release.version,
-    title: release.title,
-    repositoryName: release.repository.name,
-    workspaceName: release.workspace.name,
-    tagline: release.workspace.tagline,
-    primaryColor: release.workspace.primaryColor,
-    accentColor: release.workspace.accentColor,
-    commits,
-  });
-
-  for (const asset of assets) {
-    await prisma.releaseAsset.upsert({
-      where: { releaseId_type: { releaseId, type: asset.type } },
-      create: {
-        releaseId,
-        type: asset.type,
-        content: asset.content,
-        confidence: asset.confidence,
-      },
-      update: { content: asset.content, confidence: asset.confidence, edited: false },
-    });
-  }
-
-  const avg = Math.round(
-    assets.reduce((sum, a) => sum + a.confidence, 0) / Math.max(assets.length, 1),
-  );
-
-  await prisma.release.update({
-    where: { id: releaseId },
-    data: { status: "ready", confidence: avg },
-  });
-
-  // AI credits: one credit per generated asset.
-  await prisma.workspace.update({
-    where: { id: release.workspaceId },
-    data: { aiCredits: { decrement: assets.length } },
-  });
-
-  revalidateApp();
+  await assertOwnedRelease(releaseId);
+  await runGenerate(releaseId);
 }
 
 export async function refineReleaseAsset(
@@ -79,6 +55,7 @@ export async function refineReleaseAsset(
   type: AssetType,
   action: RefineAction,
 ) {
+  await assertOwnedRelease(releaseId);
   const [asset, release] = await Promise.all([
     prisma.releaseAsset.findUniqueOrThrow({
       where: { releaseId_type: { releaseId, type } },
@@ -108,6 +85,7 @@ export async function refineReleaseAsset(
 }
 
 export async function saveReleaseAsset(releaseId: string, type: AssetType, content: string) {
+  await assertOwnedRelease(releaseId);
   await prisma.releaseAsset.update({
     where: { releaseId_type: { releaseId, type } },
     data: { content, edited: true },
@@ -116,39 +94,23 @@ export async function saveReleaseAsset(releaseId: string, type: AssetType, conte
 }
 
 export async function updateReleaseMeta(releaseId: string, data: { title?: string }) {
-  await prisma.release.update({ where: { id: releaseId }, data });
+  await assertOwnedRelease(releaseId);
+  const title = data.title?.trim();
+  await prisma.release.update({
+    where: { id: releaseId },
+    data: { title: title ? title.slice(0, 200) : null },
+  });
   revalidatePath(`/app/releases/${releaseId}`);
+  revalidatePath("/app/releases");
 }
 
 export async function publishRelease(releaseId: string, channels: ChannelType[]) {
-  const chosen = channels.length ? channels : (["website"] as ChannelType[]);
-
-  await prisma.$transaction([
-    ...chosen.map((channel) =>
-      prisma.publishTarget.upsert({
-        where: { releaseId_channel: { releaseId, channel } },
-        create: {
-          releaseId,
-          channel,
-          status: channel === "website" ? "published" : "ready",
-          publishedAt: new Date(),
-        },
-        update: {
-          status: channel === "website" ? "published" : "ready",
-          publishedAt: new Date(),
-        },
-      }),
-    ),
-    prisma.release.update({
-      where: { id: releaseId },
-      data: { status: "published", publishStatus: "published", publishedAt: new Date() },
-    }),
-  ]);
-
-  revalidateApp();
+  await assertOwnedRelease(releaseId);
+  await runPublish(releaseId, channels);
 }
 
 export async function unpublishRelease(releaseId: string) {
+  await assertOwnedRelease(releaseId);
   await prisma.$transaction([
     prisma.publishTarget.deleteMany({ where: { releaseId } }),
     prisma.release.update({
@@ -160,6 +122,7 @@ export async function unpublishRelease(releaseId: string) {
 }
 
 export async function deleteRelease(releaseId: string) {
+  await assertOwnedRelease(releaseId);
   await prisma.release.delete({ where: { id: releaseId } });
   revalidateApp();
   redirect("/app/releases");
@@ -170,6 +133,7 @@ export async function createReleaseForRepo(formData: FormData) {
   const repositoryId = String(formData.get("repositoryId") || "");
   const breaking = formData.get("breaking") === "on";
   if (!repositoryId) return;
+  await assertOwnedRepository(repositoryId);
 
   const release = await createDraftRelease({
     repositoryId,
@@ -203,6 +167,7 @@ export async function addRepository(formData: FormData) {
 }
 
 export async function toggleAutoPublish(repositoryId: string, value: boolean) {
+  await assertOwnedRepository(repositoryId);
   await prisma.repository.update({
     where: { id: repositoryId },
     data: { autoPublish: value },
@@ -211,6 +176,7 @@ export async function toggleAutoPublish(repositoryId: string, value: boolean) {
 }
 
 export async function removeRepository(repositoryId: string) {
+  await assertOwnedRepository(repositoryId);
   await prisma.repository.delete({ where: { id: repositoryId } });
   revalidateApp();
 }

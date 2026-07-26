@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { getCurrentWorkspace } from "@/lib/session";
 import { getBaseUrl } from "@/lib/base-url";
 import { shortDate, cn } from "@/lib/utils";
 import { ASSETS_BY_TYPE, AssetType } from "@/lib/constants";
@@ -11,6 +12,8 @@ import { AssetEditor } from "@/components/asset-editor";
 import { PublishPanel } from "@/components/publish-panel";
 import { CommitBreakdown } from "@/components/commit-breakdown";
 import { DeleteReleaseButton } from "@/components/delete-release-button";
+import { ReleaseProgress } from "@/components/release-progress";
+import { ReleaseTitle } from "@/components/release-title";
 import { Markdown } from "@/components/markdown";
 
 const TABS = [
@@ -35,7 +38,13 @@ export async function generateMetadata({
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  const release = await prisma.release.findUnique({ where: { id: params.id } });
+  const ws = await getCurrentWorkspace().catch(() => null);
+  const release = ws
+    ? await prisma.release.findFirst({
+        where: { id: params.id, workspaceId: ws.id },
+        select: { version: true },
+      })
+    : null;
   return { title: release ? `${release.version} · Releases` : "Release" };
 }
 
@@ -46,8 +55,11 @@ export default async function ReleaseDetailPage({
   params: { id: string };
   searchParams: { tab?: string };
 }) {
-  const release = await prisma.release.findUnique({
-    where: { id: params.id },
+  // Scoped to the caller's workspace: a release id from another workspace must 404,
+  // not render someone else's unpublished work.
+  const ws = await getCurrentWorkspace();
+  const release = await prisma.release.findFirst({
+    where: { id: params.id, workspaceId: ws.id },
     include: {
       commits: true,
       repository: true,
@@ -108,7 +120,7 @@ export default async function ReleaseDetailPage({
             </h1>
             <StatusBadge status={release.status} />
           </div>
-          <p className="mt-1 text-lg text-zinc-600">{release.title}</p>
+          <ReleaseTitle releaseId={release.id} title={release.title} />
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-400">
             <span className="flex items-center gap-1.5">
               <Icon name="Package" size={14} />
@@ -130,26 +142,37 @@ export default async function ReleaseDetailPage({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 flex items-center gap-1 border-b border-zinc-200">
-        {TABS.map((t) => {
-          const active = tab === t.key;
-          return (
-            <Link
-              key={t.key}
-              href={`/app/releases/${release.id}?tab=${t.key}`}
-              className={cn(
-                "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium transition",
-                active
-                  ? "border-[var(--brand)] text-[var(--brand)]"
-                  : "border-transparent text-zinc-500 hover:text-zinc-800",
-              )}
-            >
-              <Icon name={t.icon} size={15} />
-              {t.label}
-            </Link>
-          );
-        })}
+      {/* Where this release is in the workflow */}
+      <ReleaseProgress
+        releaseId={release.id}
+        generated={generated}
+        reviewed={release.assets.some((a) => a.edited)}
+        published={published}
+      />
+
+      {/* Tabs (scrollable on small screens) */}
+      <div className="mb-6 border-b border-zinc-200">
+        <div className="-mb-px flex items-center gap-1 overflow-x-auto">
+          {TABS.map((t) => {
+            const active = tab === t.key;
+            return (
+              <Link
+                key={t.key}
+                href={`/app/releases/${release.id}?tab=${t.key}`}
+                scroll={false}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition",
+                  active
+                    ? "border-[var(--brand)] text-[var(--brand)]"
+                    : "border-transparent text-zinc-500 hover:text-zinc-800",
+                )}
+              >
+                <Icon name={t.icon} size={15} />
+                {t.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tab content */}
@@ -170,7 +193,7 @@ export default async function ReleaseDetailPage({
                 <EmptyState
                   icon="Sparkles"
                   title="Ready to generate"
-                  description="Relay analyzed the commits below. Click Generate to produce release notes, a changelog, announcements, and a banner — all at once."
+                  description="Relay analyzed the commits below. Click Generate to produce the release notes, changelog, announcements, and banner in one pass."
                   action={<GeneratePanel releaseId={release.id} generated={false} />}
                 />
               </div>

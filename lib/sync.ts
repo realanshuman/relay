@@ -12,7 +12,7 @@
 import { prisma } from "./db";
 import { getGithubApp, getInstallationToken, listRepoCommits } from "./github-app";
 import { createDraftRelease } from "./releases";
-import { generateRelease, publishRelease } from "./actions";
+import { runGenerate, runPublish } from "./release-engine";
 import type { ChannelType } from "./constants";
 
 export type RepoSyncResult = {
@@ -109,8 +109,8 @@ export async function syncRepository(repositoryId: string): Promise<RepoSyncResu
 
   if (repo.autoPublish) {
     try {
-      await generateRelease(release.id);
-      await publishRelease(release.id, ["website"] as ChannelType[]);
+      await runGenerate(release.id);
+      await runPublish(release.id, ["website"] as ChannelType[]);
     } catch {
       /* leave it as a draft; the user can generate manually */
     }

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
 import { getGithubApp } from "@/lib/github-app";
 import { createDraftRelease } from "@/lib/releases";
-import { generateRelease, publishRelease } from "@/lib/actions";
+import { runGenerate, runPublish } from "@/lib/release-engine";
 import type { RawCommit } from "@/lib/commits";
 import type { ChannelType } from "@/lib/constants";
 
@@ -121,8 +121,8 @@ export async function POST(req: Request) {
     let status = "draft";
     if (repo.autoPublish) {
       try {
-        await generateRelease(release.id);
-        await publishRelease(release.id, [
+        await runGenerate(release.id);
+        await runPublish(release.id, [
           "website",
           "twitter",
           "linkedin",

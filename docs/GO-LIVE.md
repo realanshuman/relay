@@ -59,8 +59,10 @@ These are UI-complete or stubbed, and are the honest "not real yet" list:
   **webhooks** from the GitHub App (instant on push / merged PR, fanned out to every
   workspace that imported the repo) and a **poller** that asks GitHub what landed since the
   commit Relay last saw. The poller powers the **Check for updates** button and runs on a
-  schedule via `/api/cron/sync` (Vercel Cron every 15 minutes, see `vercel.json`). Set
-  `CRON_SECRET` in production to lock that endpoint down.
+  schedule via `/api/cron/sync` (Vercel Cron, see `vercel.json`). The schedule is daily
+  because Vercel's Hobby plan allows one cron run per day; webhooks already give instant
+  detection, so the cron only catches gaps. On Pro you can raise it to `*/15 * * * *`.
+  Set `CRON_SECRET` in production to lock that endpoint down.
 
 - ~~One-click GitHub repo connect~~ — **done, multi-user.** One official Relay GitHub App per
   instance (registered once by the operator via the manifest flow, or provided through
