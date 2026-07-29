@@ -44,6 +44,106 @@ export async function sendEmail({ to, subject, html, text }: SendArgs): Promise<
   }
 }
 
+/**
+ * Send many emails in one go via Resend's batch endpoint (100 per request).
+ * Returns how many were accepted. Each recipient gets their own message, so
+ * addresses are never disclosed to each other.
+ */
+export async function sendEmailBatch(messages: SendArgs[]): Promise<number> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || messages.length === 0) return 0;
+  const from = emailFrom();
+  let sent = 0;
+
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100);
+    try {
+      const res = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify(
+          chunk.map((m) => ({ from, to: m.to, subject: m.subject, html: m.html, text: m.text })),
+        ),
+      });
+      if (res.ok) sent += chunk.length;
+    } catch {
+      // Skip this chunk; the caller reports the shortfall.
+    }
+  }
+  return sent;
+}
+
+export interface ReleaseEmailInput {
+  workspaceName: string;
+  version: string;
+  title?: string | null;
+  summary?: string | null;
+  /** Pre-rendered "<tag> label — text" lines. */
+  items: { tag: string; label: string; text: string }[];
+  changelogUrl: string;
+  unsubscribeUrl: string;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** The announcement sent to changelog subscribers when a release is published. */
+export function releaseAnnouncementEmail(input: ReleaseEmailInput) {
+  const { workspaceName, version, title, summary, items, changelogUrl, unsubscribeUrl } = input;
+  const headline = title || `What's new in ${version}`;
+  const subject = `${workspaceName} ${version}: ${headline}`;
+
+  const textLines = items.map(
+    (i) => `- [${i.tag}] ${i.label ? `${i.label}: ` : ""}${i.text}`,
+  );
+  const text = [
+    `${workspaceName} ${version}`,
+    headline,
+    "",
+    summary ? `${summary}\n` : "",
+    ...textLines,
+    "",
+    `Read the full notes: ${changelogUrl}`,
+    "",
+    `Unsubscribe: ${unsubscribeUrl}`,
+  ]
+    .filter((l) => l !== undefined)
+    .join("\n");
+
+  const itemsHtml = items
+    .map(
+      (i) => `<tr>
+        <td style="padding:0 0 10px 0;vertical-align:top">
+          <span style="display:inline-block;background:#f4f4f5;color:#52525b;border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em">${escapeHtml(i.tag)}</span>
+        </td>
+        <td style="padding:0 0 10px 10px;color:#3f3f46;font-size:14px;line-height:1.6">
+          ${i.label ? `<strong style="color:#18181b">${escapeHtml(i.label)}</strong> ` : ""}${escapeHtml(i.text)}
+        </td>
+      </tr>`,
+    )
+    .join("");
+
+  const html = `<div style="font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:8px">
+    <p style="font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#71717a;margin:0 0 6px">${escapeHtml(workspaceName)} ${escapeHtml(version)}</p>
+    <h1 style="font-size:24px;line-height:1.25;color:#18181b;margin:0 0 12px">${escapeHtml(headline)}</h1>
+    ${summary ? `<p style="color:#52525b;font-size:15px;line-height:1.6;margin:0 0 18px">${escapeHtml(summary)}</p>` : ""}
+    ${itemsHtml ? `<table style="width:100%;border-collapse:collapse;margin:0 0 22px">${itemsHtml}</table>` : ""}
+    <a href="${changelogUrl}" style="display:inline-block;background:#18181b;color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px">Read the full notes</a>
+    <hr style="border:none;border-top:1px solid #e4e4e7;margin:28px 0 12px" />
+    <p style="color:#a1a1aa;font-size:12px;line-height:1.6;margin:0">
+      You're receiving this because you subscribed to ${escapeHtml(workspaceName)} updates.
+      <a href="${unsubscribeUrl}" style="color:#71717a">Unsubscribe</a>.
+    </p>
+  </div>`;
+
+  return { subject, html, text };
+}
+
 export function otpEmail(code: string) {
   return {
     subject: `Your Relay code: ${code}`,

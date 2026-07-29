@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getCurrentWorkspace } from "@/lib/session";
 import { getBaseUrl } from "@/lib/base-url";
+import { emailConfigured } from "@/lib/email";
 import { shortDate, cn } from "@/lib/utils";
 import { ASSETS_BY_TYPE, AssetType } from "@/lib/constants";
 import { StatusBadge, RiskBadge, ConfidenceStars, Icon, EmptyState } from "@/components/ui";
@@ -70,6 +71,10 @@ export default async function ReleaseDetailPage({
   });
 
   if (!release) notFound();
+
+  const subscriberCount = await prisma.subscriber.count({
+    where: { workspaceId: release.workspaceId },
+  });
 
   const tab = TABS.some((t) => t.key === searchParams.tab) ? searchParams.tab! : "overview";
   const assetMap = new Map(release.assets.map((a) => [a.type as AssetType, a]));
@@ -269,6 +274,11 @@ export default async function ReleaseDetailPage({
               publishedChannels={publishedChannels}
               assets={contentByType}
               baseUrl={getBaseUrl()}
+              subscriberCount={subscriberCount}
+              emailConfigured={emailConfigured()}
+              emailSentCount={
+                release.publishTargets.find((t) => t.channel === "email")?.sentCount ?? null
+              }
             />
           </div>
         ) : (

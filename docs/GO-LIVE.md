@@ -70,9 +70,16 @@ These are UI-complete or stubbed, and are the honest "not real yet" list:
   picking repositories on GitHub's screen; installations are isolated per GitHub account, and a
   second setup can never replace the registered app. The app's push/PR webhook is wired to
   `/api/webhooks/github` so releases auto-draft on merge.
-- **Auto-posting to social channels** — Relay generates ready-to-copy / API-ready content for
+- **Auto-posting to social channels** — Relay generates ready-to-copy content for
   Twitter/LinkedIn/Discord/Telegram; it does not post to them for you yet. The changelog and
-  (with Resend) email are the fully-automated channels.
+  email are the channels Relay delivers itself.
+
+- ~~Email to subscribers~~ — **done.** Selecting the **Email** channel when publishing sends the
+  release to that workspace's subscribers through Resend (batched, one message each, so
+  addresses are never shared). Every email carries a signed one-click unsubscribe link
+  (`/api/unsubscribe`). The panel shows the subscriber count up front, asks for confirmation,
+  and reports how many were actually delivered. Email is opt-in per publish and is deliberately
+  excluded from auto-publish, so merging never mails your list by surprise.
 - **Billing** — the Billing panel is display-only; wire Stripe to charge for plans/AI credits.
 
 ## The AI: free models

@@ -7,6 +7,8 @@ import { prisma } from "./db";
 import { getCurrentUser, getCurrentWorkspace } from "./session";
 import { refineAsset } from "./ai";
 import { runGenerate, runPublish } from "./release-engine";
+import { sendReleaseToSubscribers } from "./notify";
+import { getBaseUrl } from "./base-url";
 import { createDraftRelease } from "./releases";
 import { sampleCommits } from "./sample-commits";
 import { AssetType, ChannelType, RefineAction } from "./constants";
@@ -127,9 +129,23 @@ export async function updateReleaseMeta(releaseId: string, data: { title?: strin
   revalidatePath("/app/releases");
 }
 
-export async function publishRelease(releaseId: string, channels: ChannelType[]) {
+export async function publishRelease(
+  releaseId: string,
+  channels: ChannelType[],
+): Promise<{ emailed?: number; emailSkipped?: string }> {
   await assertOwnedRelease(releaseId);
   await runPublish(releaseId, channels);
+
+  // Email is the one channel Relay delivers itself, and only when explicitly chosen.
+  if (!channels.includes("email")) return {};
+
+  const result = await sendReleaseToSubscribers(releaseId, getBaseUrl());
+  await prisma.publishTarget.updateMany({
+    where: { releaseId, channel: "email" },
+    data: { status: result.sent > 0 ? "published" : "ready", sentCount: result.sent },
+  });
+  revalidatePath(`/app/releases/${releaseId}`);
+  return { emailed: result.sent, emailSkipped: result.skipped };
 }
 
 export async function unpublishRelease(releaseId: string) {
