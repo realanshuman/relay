@@ -177,6 +177,8 @@ model PublishTarget {
   channel     String // website | twitter | linkedin | discord | telegram | email
   status      String  @default("pending") // pending | ready | published
   publishedAt DateTime?
+  // For the email channel: how many subscribers actually received it.
+  sentCount   Int?
   releaseId   String
 
   release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)

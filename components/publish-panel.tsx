@@ -15,6 +15,9 @@ interface Props {
   publishedChannels: string[];
   assets: Partial<Record<AssetType, string>>;
   baseUrl: string;
+  subscriberCount: number;
+  emailConfigured: boolean;
+  emailSentCount: number | null;
 }
 
 export function PublishPanel({
@@ -24,12 +27,19 @@ export function PublishPanel({
   publishedChannels,
   assets,
   baseUrl,
+  subscriberCount,
+  emailConfigured,
+  emailSentCount,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [notice, setNotice] = useState<string | null>(null);
+  // Email is opt-in per publish: it leaves Relay and lands in real inboxes.
   const [selected, setSelected] = useState<Set<ChannelType>>(
-    new Set(CHANNELS.map((c) => c.channel)),
+    new Set(CHANNELS.map((c) => c.channel).filter((c) => c !== "email")),
   );
+
+  const canEmail = emailConfigured && subscriberCount > 0;
 
   function toggle(ch: ChannelType) {
     setSelected((prev) => {
@@ -40,8 +50,28 @@ export function PublishPanel({
   }
 
   function publish() {
+    if (
+      selected.has("email") &&
+      !confirm(
+        `Send this release to ${subscriberCount} subscriber${subscriberCount === 1 ? "" : "s"}?\n\nEmails go out immediately and can't be recalled.`,
+      )
+    ) {
+      return;
+    }
+    setNotice(null);
     startTransition(async () => {
-      await publishRelease(releaseId, Array.from(selected));
+      const res = await publishRelease(releaseId, Array.from(selected));
+      if (res?.emailed !== undefined) {
+        setNotice(
+          res.emailed > 0
+            ? `Emailed ${res.emailed} subscriber${res.emailed === 1 ? "" : "s"}.`
+            : res.emailSkipped === "no_email_provider"
+              ? "Published, but no email provider is connected so nothing was sent."
+              : res.emailSkipped === "no_subscribers"
+                ? "Published. There are no subscribers to email yet."
+                : "Published, but the emails could not be sent.",
+        );
+      }
       router.refresh();
     });
   }
@@ -84,7 +114,13 @@ export function PublishPanel({
                   <Icon name={c.icon} size={16} className="text-zinc-400" />
                   <span className="text-sm font-medium text-zinc-700">{c.label}</span>
                   {isPublished ? (
-                    c.autoPublished ? (
+                    c.channel === "email" ? (
+                      <Badge tone={emailSentCount ? "green" : "zinc"} dot={Boolean(emailSentCount)}>
+                        {emailSentCount
+                          ? `Sent to ${emailSentCount}`
+                          : "Nothing sent"}
+                      </Badge>
+                    ) : c.autoPublished ? (
                       <Badge tone="green" dot>
                         Live
                       </Badge>
@@ -95,7 +131,7 @@ export function PublishPanel({
                     <Badge tone="zinc">Skipped</Badge>
                   )}
                 </div>
-                {isPublished && !c.autoPublished && content && (
+                {isPublished && !c.autoPublished && c.channel !== "email" && content && (
                   <CopyButton text={content} label="Copy post" />
                 )}
                 {isPublished && c.autoPublished && (
@@ -127,28 +163,51 @@ export function PublishPanel({
       <div className="card divide-y divide-zinc-100">
         {CHANNELS.map((c) => {
           const on = selected.has(c.channel);
+          const isEmail = c.channel === "email";
+          const disabled = isEmail && !canEmail;
           return (
             <label
               key={c.channel}
-              className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3"
+              className={cn(
+                "flex items-center justify-between gap-3 px-4 py-3",
+                disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+              )}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <input
                   type="checkbox"
-                  checked={on}
+                  checked={on && !disabled}
+                  disabled={disabled}
                   onChange={() => toggle(c.channel)}
                   className="h-4 w-4 rounded border-zinc-300 text-[var(--brand)] focus:ring-[var(--brand)]"
                 />
-                <Icon name={c.icon} size={16} className="text-zinc-400" />
-                <span className="text-sm font-medium text-zinc-700">{c.label}</span>
+                <Icon name={c.icon} size={16} className="shrink-0 text-zinc-400" />
+                <span className="truncate text-sm font-medium text-zinc-700">{c.label}</span>
+                {isEmail && canEmail && on && (
+                  <Badge tone="amber">Sends {subscriberCount}</Badge>
+                )}
               </div>
-              <span className="text-xs text-zinc-400">
-                {c.autoPublished ? "Published to your changelog" : "Ready-to-copy content"}
+              <span className="shrink-0 text-right text-xs text-zinc-400">
+                {isEmail
+                  ? !emailConfigured
+                    ? "No email provider"
+                    : subscriberCount === 0
+                      ? "No subscribers yet"
+                      : `${subscriberCount} subscriber${subscriberCount === 1 ? "" : "s"}`
+                  : c.autoPublished
+                    ? "Published to your changelog"
+                    : "Ready-to-copy content"}
               </span>
             </label>
           );
         })}
       </div>
+
+      {notice && (
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+          {notice}
+        </div>
+      )}
 
       <button
         onClick={publish}

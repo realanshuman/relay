@@ -122,12 +122,10 @@ export async function POST(req: Request) {
     if (repo.autoPublish) {
       try {
         await runGenerate(release.id);
-        await runPublish(release.id, [
-          "website",
-          "twitter",
-          "linkedin",
-          "email",
-        ] as ChannelType[]);
+        // Auto-publish covers the changelog only. Emailing subscribers stays a
+        // deliberate action from the Publish panel so nobody's list is mailed
+        // automatically on every merge.
+        await runPublish(release.id, ["website"] as ChannelType[]);
         status = "published";
       } catch (err) {
         results.push({
